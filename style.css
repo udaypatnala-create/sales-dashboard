@@ -289,6 +289,18 @@ option {
     color: white;
     border-bottom: 1px solid var(--glass-border);
     padding-bottom: 0.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.tab-total {
+    font-size: 1.1rem;
+    color: #58a6ff;
+    background: rgba(88, 166, 255, 0.1);
+    padding: 0.3rem 0.8rem;
+    border-radius: 6px;
+    font-weight: 500;
 }
 
 /* Tables */

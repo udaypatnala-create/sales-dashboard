@@ -103,6 +103,10 @@ function renderTables() {
     let expHtml = [];
     let pgHtml = [];
     
+    let indTotal = 0;
+    let expTotal = 0;
+    let pgTotal = 0;
+    
     // Performance guard
     const maxRows = 1000;
     
@@ -115,18 +119,26 @@ function renderTables() {
             <td>₹${(d.amount || 0).toLocaleString('en-IN', {maximumFractionDigits: 2})}</td>
         </tr>`;
         
-        if (d.region === "India" && indHtml.length < maxRows) {
-            indHtml.push(row);
-        } else if (d.region === "Export" && expHtml.length < maxRows) {
-            expHtml.push(row);
-        } else if (d.region === "PG Sales" && pgHtml.length < maxRows) {
-            pgHtml.push(row);
+        if (d.region === "India") {
+            indTotal += (d.amount || 0);
+            if (indHtml.length < maxRows) indHtml.push(row);
+        } else if (d.region === "Export") {
+            expTotal += (d.amount || 0);
+            if (expHtml.length < maxRows) expHtml.push(row);
+        } else if (d.region === "PG Sales") {
+            pgTotal += (d.amount || 0);
+            if (pgHtml.length < maxRows) pgHtml.push(row);
         }
     });
 
     tableIndia.innerHTML = indHtml.join('');
     tableExport.innerHTML = expHtml.join('');
     tablePg.innerHTML = pgHtml.join('');
+
+    // Update the sub-total headers
+    document.getElementById('india-total-inr').textContent = `Total: ₹${(indTotal / 10000000).toLocaleString('en-IN', {maximumFractionDigits: 2})} Cr`;
+    document.getElementById('export-total-inr').textContent = `Total: ₹${(expTotal / 10000000).toLocaleString('en-IN', {maximumFractionDigits: 2})} Cr`;
+    document.getElementById('pg-total-inr').textContent = `Total: ₹${(pgTotal / 10000000).toLocaleString('en-IN', {maximumFractionDigits: 2})} Cr`;
 }
 
 function createChart(ctxId, type, data, options) {
