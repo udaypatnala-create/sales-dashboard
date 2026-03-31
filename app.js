@@ -53,6 +53,11 @@ function addEventListeners() {
             }
             applyFilters();
         });
+        
+        // Also fire instantly while typing on Custom dates
+        if (id.startsWith('date-')) {
+            document.getElementById(id).addEventListener('input', applyFilters);
+        }
     });
 
     document.querySelectorAll('.tab-btn').forEach(btn => {
@@ -88,11 +93,13 @@ function applyFilters() {
                (camTarget === 'All' || d.campaign === camTarget);
                
         if (!textMatch) return false;
+        if (timeTarget === 'All') return true;
         
-        if (timeTarget === 'All' || !d.date || d.date === 'Unknown') return true;
+        // Hide records missing valid dates when a strict date range filter is active
+        if (!d.date || d.date === 'Unknown') return false;
         
         const itemDate = new Date(d.date);
-        if (isNaN(itemDate.getTime())) return true;
+        if (isNaN(itemDate.getTime())) return false;
         
         if (timeTarget === 'This Month') {
             return itemDate.getMonth() === currentMonth && itemDate.getFullYear() === currentYear;
