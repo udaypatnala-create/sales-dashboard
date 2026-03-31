@@ -46,8 +46,11 @@ function populateFilters() {
 }
 
 function addEventListeners() {
-    ['fy-filter', 'region-filter', 'agency-filter', 'campaign-filter'].forEach(id => {
-        document.getElementById(id).addEventListener('change', () => {
+    ['fy-filter', 'region-filter', 'agency-filter', 'campaign-filter', 'time-filter', 'date-from', 'date-to'].forEach(id => {
+        document.getElementById(id).addEventListener('change', (e) => {
+            if (id === 'time-filter') {
+                document.getElementById('custom-date-group').style.display = e.target.value === 'Custom' ? 'block' : 'none';
+            }
             applyFilters();
         });
     });
@@ -69,12 +72,45 @@ function applyFilters() {
     const regTarget = document.getElementById('region-filter').value;
     const agTarget = document.getElementById('agency-filter').value;
     const camTarget = document.getElementById('campaign-filter').value;
+    const timeTarget = document.getElementById('time-filter').value;
+    
+    const dFrom = new Date(document.getElementById('date-from').value);
+    const dTo = new Date(document.getElementById('date-to').value);
+    
+    const now = new Date();
+    const currentMonth = now.getMonth();
+    const currentYear = now.getFullYear();
 
     filteredData = globalData.filter(d => {
-        return (fyTarget === 'All' || d.fy === fyTarget) &&
+        let textMatch = (fyTarget === 'All' || d.fy === fyTarget) &&
                (regTarget === 'All' || d.region === regTarget) &&
                (agTarget === 'All' || d.agency === agTarget) &&
                (camTarget === 'All' || d.campaign === camTarget);
+               
+        if (!textMatch) return false;
+        
+        if (timeTarget === 'All' || !d.date || d.date === 'Unknown') return true;
+        
+        const itemDate = new Date(d.date);
+        if (isNaN(itemDate.getTime())) return true;
+        
+        if (timeTarget === 'This Month') {
+            return itemDate.getMonth() === currentMonth && itemDate.getFullYear() === currentYear;
+        } else if (timeTarget === 'Last Month') {
+            let lm = currentMonth - 1;
+            let ly = currentYear;
+            if (lm < 0) { lm = 11; ly--; }
+            return itemDate.getMonth() === lm && itemDate.getFullYear() === ly;
+        } else if (timeTarget === 'Custom') {
+            if (!isNaN(dFrom.getTime()) && itemDate < dFrom) return false;
+            // Shift to end of day for precise inclusive filtering
+            if (!isNaN(dTo.getTime())) {
+                const toEnd = new Date(dTo.getTime());
+                toEnd.setHours(23, 59, 59, 999);
+                if (itemDate > toEnd) return false;
+            }
+        }
+        return true;
     });
 
     renderDashboard();

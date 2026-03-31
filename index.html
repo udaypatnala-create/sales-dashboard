@@ -32,6 +32,24 @@
             </div>
             
             <div class="filter-group">
+                <label for="time-filter">Date Filter</label>
+                <select id="time-filter">
+                    <option value="All">All Time</option>
+                    <option value="This Month">This Month</option>
+                    <option value="Last Month">Last Month</option>
+                    <option value="Custom">Custom Range</option>
+                </select>
+            </div>
+            
+            <div class="filter-group" id="custom-date-group" style="display: none; min-width: 250px;">
+                <label>Custom Range (From - To)</label>
+                <div style="display:flex; gap:0.5rem">
+                    <input type="date" id="date-from" class="date-input">
+                    <input type="date" id="date-to" class="date-input">
+                </div>
+            </div>
+            
+            <div class="filter-group">
                 <label for="region-filter">Region</label>
                 <select id="region-filter">
                     <option value="All">All Regions</option>
