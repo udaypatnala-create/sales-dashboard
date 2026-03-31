@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Sales Dashboard</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="blob-bg blob-1"></div>
+    <div class="blob-bg blob-2"></div>
+    
+    <div class="dashboard-container">
+        
+        <header class="glass-panel">
+            <h1>Sales Performance Dashboard</h1>
+            <p>Comprehensive Multi-Year Revenue Overview</p>
+        </header>
+
+        <section class="filters glass-panel">
+            <div class="filter-group">
+                <label for="fy-filter">Financial Year</label>
+                <select id="fy-filter">
+                    <option value="All">All Years</option>
+                </select>
+            </div>
+            
+            <div class="filter-group">
+                <label for="region-filter">Region</label>
+                <select id="region-filter">
+                    <option value="All">All Regions</option>
+                </select>
+            </div>
+            
+            <div class="filter-group">
+                <label for="agency-filter">Agency</label>
+                <select id="agency-filter">
+                    <option value="All">All Agencies</option>
+                </select>
+            </div>
+            
+            <div class="filter-group">
+                <label for="campaign-filter">Campaign</label>
+                <select id="campaign-filter">
+                    <option value="All">All Campaigns</option>
+                </select>
+            </div>
+        </section>
+
+        <section class="tabs-nav glass-panel">
+            <button class="tab-btn active" data-tab="tab-dashboard">Graphical Dashboard</button>
+            <button class="tab-btn" data-tab="tab-india">India Sales</button>
+            <button class="tab-btn" data-tab="tab-export">Export Sales</button>
+            <button class="tab-btn" data-tab="tab-pg">PG Sales</button>
+        </section>
+
+        <div class="tab-content-container">
+            <div class="tab-pane active" id="tab-dashboard">
+        
+        <section class="kpis">
+            <div class="kpi-card glass-panel" style="--animation-order: 1">
+                <div class="kpi-title">Total Revenue</div>
+                <div class="kpi-value" id="kpi-revenue">₹0</div>
+                <div class="kpi-subtitle">across selected filters</div>
+            </div>
+            <div class="kpi-card glass-panel" style="--animation-order: 2">
+                <div class="kpi-title">Active Campaigns</div>
+                <div class="kpi-value" id="kpi-campaigns">0</div>
+                <div class="kpi-subtitle">campaign setups</div>
+            </div>
+            <div class="kpi-card glass-panel" style="--animation-order: 3">
+                <div class="kpi-title">Total Records</div>
+                <div class="kpi-value" id="kpi-records">0</div>
+                <div class="kpi-subtitle">invoies / orders</div>
+            </div>
+        </section>
+
+        <section class="charts-grid">
+            <div class="chart-container glass-panel span-full">
+                <h2>Revenue Trend across FY</h2>
+                <div class="canvas-wrapper">
+                    <canvas id="trendChart"></canvas>
+                </div>
+            </div>
+            
+            <div class="chart-container glass-panel">
+                <h2>Top 10 Agencies</h2>
+                <div class="canvas-wrapper">
+                    <canvas id="agencyChart"></canvas>
+                </div>
+            </div>
+
+            <div class="chart-container glass-panel">
+                <h2>Revenue by Region</h2>
+                <div class="canvas-wrapper">
+                    <canvas id="regionChart"></canvas>
+                </div>
+            </div>
+        </section>
+            </div>
+
+            <div class="tab-pane glass-panel" id="tab-india">
+                <h2>India Sales Records</h2>
+                <div class="table-container">
+                    <table id="table-india">
+                        <thead>
+                            <tr><th>FY</th><th>Date</th><th>Agency</th><th>Campaign</th><th>Revenue (₹)</th></tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="tab-pane glass-panel" id="tab-export">
+                <h2>Export Sales Records</h2>
+                <div class="table-container">
+                    <table id="table-export">
+                        <thead>
+                            <tr><th>FY</th><th>Date</th><th>Agency</th><th>Campaign</th><th>Revenue (₹)</th></tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="tab-pane glass-panel" id="tab-pg">
+                <h2>PG Sales Records</h2>
+                <div class="table-container">
+                    <table id="table-pg">
+                        <thead>
+                            <tr><th>FY</th><th>Date</th><th>Agency</th><th>Campaign</th><th>Revenue (₹)</th></tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        
+    </div>
+    
+    <script src="app.js"></script>
+</body>
+</html>
