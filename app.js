@@ -49,7 +49,7 @@ function addEventListeners() {
     ['fy-filter', 'region-filter', 'agency-filter', 'campaign-filter', 'time-filter', 'date-from', 'date-to'].forEach(id => {
         document.getElementById(id).addEventListener('change', (e) => {
             if (id === 'time-filter') {
-                document.getElementById('custom-date-group').style.display = e.target.value === 'Custom' ? 'block' : 'none';
+                document.getElementById('custom-date-group').style.display = e.target.value === 'Custom' ? 'flex' : 'none';
             }
             applyFilters();
         });
