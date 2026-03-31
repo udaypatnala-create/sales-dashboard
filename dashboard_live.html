@@ -156,6 +156,19 @@ select {
     background-size: 1em;
 }
 
+.date-input {
+    width: 100%;
+    padding: 0.8rem 1rem;
+    border-radius: 8px;
+    background: rgba(0, 0, 0, 0.2);
+    border: 1px solid var(--glass-border);
+    color: white;
+    font-family: inherit;
+    font-size: 0.95rem;
+    outline: none;
+    color-scheme: dark;
+}
+
 select:focus, select:hover {
     border-color: var(--accent-hover);
     background-color: rgba(255, 255, 255, 0.05);
@@ -301,6 +314,18 @@ option {
     color: white;
     border-bottom: 1px solid var(--glass-border);
     padding-bottom: 0.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.tab-total {
+    font-size: 1.1rem;
+    color: #58a6ff;
+    background: rgba(88, 166, 255, 0.1);
+    padding: 0.3rem 0.8rem;
+    border-radius: 6px;
+    font-weight: 500;
 }
 
 /* Tables */
@@ -387,6 +412,24 @@ tbody tr:hover {
             </div>
             
             <div class="filter-group">
+                <label for="time-filter">Date Filter</label>
+                <select id="time-filter">
+                    <option value="All">All Time</option>
+                    <option value="This Month">This Month</option>
+                    <option value="Last Month">Last Month</option>
+                    <option value="Custom">Custom Range</option>
+                </select>
+            </div>
+            
+            <div class="filter-group" id="custom-date-group" style="display: none; min-width: 250px;">
+                <label>Custom Range (From - To)</label>
+                <div style="display:flex; gap:0.5rem">
+                    <input type="date" id="date-from" class="date-input">
+                    <input type="date" id="date-to" class="date-input">
+                </div>
+            </div>
+            
+            <div class="filter-group">
                 <label for="region-filter">Region</label>
                 <select id="region-filter">
                     <option value="All">All Regions</option>
@@ -461,7 +504,7 @@ tbody tr:hover {
             </div>
 
             <div class="tab-pane glass-panel" id="tab-india">
-                <h2>India Sales Records</h2>
+                <h2>India Sales Records <span id="india-total-inr" class="tab-total">Total: ₹0</span></h2>
                 <div class="table-container">
                     <table id="table-india">
                         <thead>
@@ -473,7 +516,7 @@ tbody tr:hover {
             </div>
 
             <div class="tab-pane glass-panel" id="tab-export">
-                <h2>Export Sales Records</h2>
+                <h2>Export Sales Records <span id="export-total-inr" class="tab-total">Total: ₹0</span></h2>
                 <div class="table-container">
                     <table id="table-export">
                         <thead>
@@ -485,7 +528,7 @@ tbody tr:hover {
             </div>
 
             <div class="tab-pane glass-panel" id="tab-pg">
-                <h2>PG Sales Records</h2>
+                <h2>PG Sales Records <span id="pg-total-inr" class="tab-total">Total: ₹0</span></h2>
                 <div class="table-container">
                     <table id="table-pg">
                         <thead>
@@ -32467,8 +32510,11 @@ function populateFilters() {
 }
 
 function addEventListeners() {
-    ['fy-filter', 'region-filter', 'agency-filter', 'campaign-filter'].forEach(id => {
-        document.getElementById(id).addEventListener('change', () => {
+    ['fy-filter', 'region-filter', 'agency-filter', 'campaign-filter', 'time-filter', 'date-from', 'date-to'].forEach(id => {
+        document.getElementById(id).addEventListener('change', (e) => {
+            if (id === 'time-filter') {
+                document.getElementById('custom-date-group').style.display = e.target.value === 'Custom' ? 'block' : 'none';
+            }
             applyFilters();
         });
     });
@@ -32490,12 +32536,45 @@ function applyFilters() {
     const regTarget = document.getElementById('region-filter').value;
     const agTarget = document.getElementById('agency-filter').value;
     const camTarget = document.getElementById('campaign-filter').value;
+    const timeTarget = document.getElementById('time-filter').value;
+    
+    const dFrom = new Date(document.getElementById('date-from').value);
+    const dTo = new Date(document.getElementById('date-to').value);
+    
+    const now = new Date();
+    const currentMonth = now.getMonth();
+    const currentYear = now.getFullYear();
 
     filteredData = globalData.filter(d => {
-        return (fyTarget === 'All' || d.fy === fyTarget) &&
+        let textMatch = (fyTarget === 'All' || d.fy === fyTarget) &&
                (regTarget === 'All' || d.region === regTarget) &&
                (agTarget === 'All' || d.agency === agTarget) &&
                (camTarget === 'All' || d.campaign === camTarget);
+               
+        if (!textMatch) return false;
+        
+        if (timeTarget === 'All' || !d.date || d.date === 'Unknown') return true;
+        
+        const itemDate = new Date(d.date);
+        if (isNaN(itemDate.getTime())) return true;
+        
+        if (timeTarget === 'This Month') {
+            return itemDate.getMonth() === currentMonth && itemDate.getFullYear() === currentYear;
+        } else if (timeTarget === 'Last Month') {
+            let lm = currentMonth - 1;
+            let ly = currentYear;
+            if (lm < 0) { lm = 11; ly--; }
+            return itemDate.getMonth() === lm && itemDate.getFullYear() === ly;
+        } else if (timeTarget === 'Custom') {
+            if (!isNaN(dFrom.getTime()) && itemDate < dFrom) return false;
+            // Shift to end of day for precise inclusive filtering
+            if (!isNaN(dTo.getTime())) {
+                const toEnd = new Date(dTo.getTime());
+                toEnd.setHours(23, 59, 59, 999);
+                if (itemDate > toEnd) return false;
+            }
+        }
+        return true;
     });
 
     renderDashboard();
@@ -32524,6 +32603,10 @@ function renderTables() {
     let expHtml = [];
     let pgHtml = [];
     
+    let indTotal = 0;
+    let expTotal = 0;
+    let pgTotal = 0;
+    
     // Performance guard
     const maxRows = 1000;
     
@@ -32536,18 +32619,26 @@ function renderTables() {
             <td>₹${(d.amount || 0).toLocaleString('en-IN', {maximumFractionDigits: 2})}</td>
         </tr>`;
         
-        if (d.region === "India" && indHtml.length < maxRows) {
-            indHtml.push(row);
-        } else if (d.region === "Export" && expHtml.length < maxRows) {
-            expHtml.push(row);
-        } else if (d.region === "PG Sales" && pgHtml.length < maxRows) {
-            pgHtml.push(row);
+        if (d.region === "India") {
+            indTotal += (d.amount || 0);
+            if (indHtml.length < maxRows) indHtml.push(row);
+        } else if (d.region === "Export") {
+            expTotal += (d.amount || 0);
+            if (expHtml.length < maxRows) expHtml.push(row);
+        } else if (d.region === "PG Sales") {
+            pgTotal += (d.amount || 0);
+            if (pgHtml.length < maxRows) pgHtml.push(row);
         }
     });
 
     tableIndia.innerHTML = indHtml.join('');
     tableExport.innerHTML = expHtml.join('');
     tablePg.innerHTML = pgHtml.join('');
+
+    // Update the sub-total headers
+    document.getElementById('india-total-inr').textContent = `Total: ₹${(indTotal / 10000000).toLocaleString('en-IN', {maximumFractionDigits: 2})} Cr`;
+    document.getElementById('export-total-inr').textContent = `Total: ₹${(expTotal / 10000000).toLocaleString('en-IN', {maximumFractionDigits: 2})} Cr`;
+    document.getElementById('pg-total-inr').textContent = `Total: ₹${(pgTotal / 10000000).toLocaleString('en-IN', {maximumFractionDigits: 2})} Cr`;
 }
 
 function createChart(ctxId, type, data, options) {

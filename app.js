@@ -171,10 +171,18 @@ function renderTables() {
     tableExport.innerHTML = expHtml.join('');
     tablePg.innerHTML = pgHtml.join('');
 
-    // Update the sub-total headers
-    document.getElementById('india-total-inr').textContent = `Total: ₹${(indTotal / 10000000).toLocaleString('en-IN', {maximumFractionDigits: 2})} Cr`;
-    document.getElementById('export-total-inr').textContent = `Total: ₹${(expTotal / 10000000).toLocaleString('en-IN', {maximumFractionDigits: 2})} Cr`;
-    document.getElementById('pg-total-inr').textContent = `Total: ₹${(pgTotal / 10000000).toLocaleString('en-IN', {maximumFractionDigits: 2})} Cr`;
+    // Update the sub-total headers and footers
+    const fInd = `₹${(indTotal / 10000000).toLocaleString('en-IN', {maximumFractionDigits: 2})} Cr`;
+    const fExp = `₹${(expTotal / 10000000).toLocaleString('en-IN', {maximumFractionDigits: 2})} Cr`;
+    const fPg = `₹${(pgTotal / 10000000).toLocaleString('en-IN', {maximumFractionDigits: 2})} Cr`;
+
+    document.getElementById('india-total-inr').textContent = `Total: ${fInd}`;
+    document.getElementById('export-total-inr').textContent = `Total: ${fExp}`;
+    document.getElementById('pg-total-inr').textContent = `Total: ${fPg}`;
+
+    document.getElementById('india-table-footer-total').textContent = fInd;
+    document.getElementById('export-table-footer-total').textContent = fExp;
+    document.getElementById('pg-table-footer-total').textContent = fPg;
 }
 
 function createChart(ctxId, type, data, options) {
