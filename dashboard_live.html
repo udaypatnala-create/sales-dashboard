@@ -156,7 +156,7 @@ select {
     background-size: 1em;
 }
 
-.date-input {
+.date-input, .search-input {
     width: 100%;
     padding: 0.8rem 1rem;
     border-radius: 8px;
@@ -167,6 +167,10 @@ select {
     font-size: 0.95rem;
     outline: none;
     color-scheme: dark;
+}
+
+.search-input::placeholder {
+    color: var(--text-muted);
 }
 
 select:focus, select:hover {
@@ -449,6 +453,11 @@ tbody tr:hover {
                     <option value="All">All Campaigns</option>
                 </select>
             </div>
+            
+            <div class="filter-group">
+                <label for="search-filter">Search</label>
+                <input type="text" id="search-filter" class="search-input" placeholder="Search campaign, agency...">
+            </div>
         </section>
 
         <section class="tabs-nav glass-panel">
@@ -501,6 +510,24 @@ tbody tr:hover {
                 </div>
             </div>
         </section>
+
+        <section class="summary-table-section glass-panel" style="margin-top: 1.5rem; animation: slideUp 0.6s ease forwards; animation-delay: 0.4s; opacity: 0; padding-top: 1rem;">
+            <h2>Regional Dashboard Summary</h2>
+            <div class="table-container" style="margin-top: 1rem;">
+                <table id="table-summary">
+                    <thead>
+                        <tr><th>Region</th><th>Records</th><th>Unique Campaigns</th><th>Revenue (₹ Cr)</th></tr>
+                    </thead>
+                    <tbody></tbody>
+                    <tfoot>
+                        <tr style="font-weight: bold; font-size: 1.1em; background: rgba(88, 166, 255, 0.15);">
+                            <td colspan="3" style="text-align: right;">Overall Dashboard Total:</td>
+                            <td id="summary-table-footer-total">₹0 Cr</td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </section>
             </div>
 
             <div class="tab-pane glass-panel" id="tab-india">
@@ -511,6 +538,12 @@ tbody tr:hover {
                             <tr><th>FY</th><th>Date</th><th>Agency</th><th>Campaign</th><th>Revenue (₹)</th></tr>
                         </thead>
                         <tbody></tbody>
+                        <tfoot>
+                            <tr style="font-weight: bold; font-size: 1.1em; background: rgba(88, 166, 255, 0.15);">
+                                <td colspan="4" style="text-align: right;">Total Amount:</td>
+                                <td id="india-table-footer-total">₹0</td>
+                            </tr>
+                        </tfoot>
                     </table>
                 </div>
             </div>
@@ -523,6 +556,12 @@ tbody tr:hover {
                             <tr><th>FY</th><th>Date</th><th>Agency</th><th>Campaign</th><th>Revenue (₹)</th></tr>
                         </thead>
                         <tbody></tbody>
+                        <tfoot>
+                            <tr style="font-weight: bold; font-size: 1.1em; background: rgba(88, 166, 255, 0.15);">
+                                <td colspan="4" style="text-align: right;">Total Amount:</td>
+                                <td id="export-table-footer-total">₹0</td>
+                            </tr>
+                        </tfoot>
                     </table>
                 </div>
             </div>
@@ -535,6 +574,12 @@ tbody tr:hover {
                             <tr><th>FY</th><th>Date</th><th>Agency</th><th>Campaign</th><th>Revenue (₹)</th></tr>
                         </thead>
                         <tbody></tbody>
+                        <tfoot>
+                            <tr style="font-weight: bold; font-size: 1.1em; background: rgba(88, 166, 255, 0.15);">
+                                <td colspan="4" style="text-align: right;">Total Amount:</td>
+                                <td id="pg-table-footer-total">₹0</td>
+                            </tr>
+                        </tfoot>
                     </table>
                 </div>
             </div>
@@ -32510,13 +32555,18 @@ function populateFilters() {
 }
 
 function addEventListeners() {
-    ['fy-filter', 'region-filter', 'agency-filter', 'campaign-filter', 'time-filter', 'date-from', 'date-to'].forEach(id => {
+    ['fy-filter', 'region-filter', 'agency-filter', 'campaign-filter', 'time-filter', 'date-from', 'date-to', 'search-filter'].forEach(id => {
         document.getElementById(id).addEventListener('change', (e) => {
             if (id === 'time-filter') {
-                document.getElementById('custom-date-group').style.display = e.target.value === 'Custom' ? 'block' : 'none';
+                document.getElementById('custom-date-group').style.display = e.target.value === 'Custom' ? 'flex' : 'none';
             }
             applyFilters();
         });
+        
+        // Also fire instantly while typing on Custom dates or search
+        if (id.startsWith('date-') || id === 'search-filter') {
+            document.getElementById(id).addEventListener('input', applyFilters);
+        }
     });
 
     document.querySelectorAll('.tab-btn').forEach(btn => {
@@ -32537,6 +32587,7 @@ function applyFilters() {
     const agTarget = document.getElementById('agency-filter').value;
     const camTarget = document.getElementById('campaign-filter').value;
     const timeTarget = document.getElementById('time-filter').value;
+    const searchTarget = document.getElementById('search-filter').value.toLowerCase().trim();
     
     const dFrom = new Date(document.getElementById('date-from').value);
     const dTo = new Date(document.getElementById('date-to').value);
@@ -32553,10 +32604,22 @@ function applyFilters() {
                
         if (!textMatch) return false;
         
-        if (timeTarget === 'All' || !d.date || d.date === 'Unknown') return true;
+        if (searchTarget !== "") {
+            const ag = d.agency ? d.agency.toLowerCase() : "";
+            const cam = d.campaign ? d.campaign.toLowerCase() : "";
+            const reg = d.region ? d.region.toLowerCase() : "";
+            if (!ag.includes(searchTarget) && !cam.includes(searchTarget) && !reg.includes(searchTarget)) {
+                return false;
+            }
+        }
+
+        if (timeTarget === 'All') return true;
+        
+        // Hide records missing valid dates when a strict date range filter is active
+        if (!d.date || d.date === 'Unknown') return false;
         
         const itemDate = new Date(d.date);
-        if (isNaN(itemDate.getTime())) return true;
+        if (isNaN(itemDate.getTime())) return false;
         
         if (timeTarget === 'This Month') {
             return itemDate.getMonth() === currentMonth && itemDate.getFullYear() === currentYear;
@@ -32591,7 +32654,39 @@ function renderDashboard() {
     updateTrendChart();
     updateAgencyChart();
     updateRegionChart();
+    renderSummaryTable();
     renderTables();
+}
+
+function renderSummaryTable() {
+    const tableBody = document.querySelector('#table-summary tbody');
+    if (!tableBody) return;
+    let summaryData = {};
+    let grandTotal = 0;
+    
+    filteredData.forEach(d => {
+        const r = d.region || "Unknown";
+        if (!summaryData[r]) {
+            summaryData[r] = { records: 0, campaigns: new Set(), revenue: 0 };
+        }
+        summaryData[r].records += 1;
+        if(d.campaign) summaryData[r].campaigns.add(d.campaign);
+        summaryData[r].revenue += (d.amount || 0);
+        grandTotal += (d.amount || 0);
+    });
+
+    let html = [];
+    for (const [region, data] of Object.entries(summaryData)) {
+        html.push(`<tr>
+            <td>${region}</td>
+            <td>${data.records.toLocaleString('en-IN')}</td>
+            <td>${data.campaigns.size.toLocaleString('en-IN')}</td>
+            <td>₹${(data.revenue / 10000000).toLocaleString('en-IN', {maximumFractionDigits: 2})}</td>
+        </tr>`);
+    }
+
+    tableBody.innerHTML = html.join('');
+    document.getElementById('summary-table-footer-total').textContent = `₹${(grandTotal / 10000000).toLocaleString('en-IN', {maximumFractionDigits: 2})} Cr`;
 }
 
 function renderTables() {
@@ -32635,10 +32730,18 @@ function renderTables() {
     tableExport.innerHTML = expHtml.join('');
     tablePg.innerHTML = pgHtml.join('');
 
-    // Update the sub-total headers
-    document.getElementById('india-total-inr').textContent = `Total: ₹${(indTotal / 10000000).toLocaleString('en-IN', {maximumFractionDigits: 2})} Cr`;
-    document.getElementById('export-total-inr').textContent = `Total: ₹${(expTotal / 10000000).toLocaleString('en-IN', {maximumFractionDigits: 2})} Cr`;
-    document.getElementById('pg-total-inr').textContent = `Total: ₹${(pgTotal / 10000000).toLocaleString('en-IN', {maximumFractionDigits: 2})} Cr`;
+    // Update the sub-total headers and footers
+    const fInd = `₹${(indTotal / 10000000).toLocaleString('en-IN', {maximumFractionDigits: 2})} Cr`;
+    const fExp = `₹${(expTotal / 10000000).toLocaleString('en-IN', {maximumFractionDigits: 2})} Cr`;
+    const fPg = `₹${(pgTotal / 10000000).toLocaleString('en-IN', {maximumFractionDigits: 2})} Cr`;
+
+    document.getElementById('india-total-inr').textContent = `Total: ${fInd}`;
+    document.getElementById('export-total-inr').textContent = `Total: ${fExp}`;
+    document.getElementById('pg-total-inr').textContent = `Total: ${fPg}`;
+
+    document.getElementById('india-table-footer-total').textContent = fInd;
+    document.getElementById('export-table-footer-total').textContent = fExp;
+    document.getElementById('pg-table-footer-total').textContent = fPg;
 }
 
 function createChart(ctxId, type, data, options) {

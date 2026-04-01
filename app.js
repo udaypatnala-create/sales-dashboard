@@ -46,7 +46,7 @@ function populateFilters() {
 }
 
 function addEventListeners() {
-    ['fy-filter', 'region-filter', 'agency-filter', 'campaign-filter', 'time-filter', 'date-from', 'date-to'].forEach(id => {
+    ['fy-filter', 'region-filter', 'agency-filter', 'campaign-filter', 'time-filter', 'date-from', 'date-to', 'search-filter'].forEach(id => {
         document.getElementById(id).addEventListener('change', (e) => {
             if (id === 'time-filter') {
                 document.getElementById('custom-date-group').style.display = e.target.value === 'Custom' ? 'flex' : 'none';
@@ -54,8 +54,8 @@ function addEventListeners() {
             applyFilters();
         });
         
-        // Also fire instantly while typing on Custom dates
-        if (id.startsWith('date-')) {
+        // Also fire instantly while typing on Custom dates or search
+        if (id.startsWith('date-') || id === 'search-filter') {
             document.getElementById(id).addEventListener('input', applyFilters);
         }
     });
@@ -78,6 +78,7 @@ function applyFilters() {
     const agTarget = document.getElementById('agency-filter').value;
     const camTarget = document.getElementById('campaign-filter').value;
     const timeTarget = document.getElementById('time-filter').value;
+    const searchTarget = document.getElementById('search-filter').value.toLowerCase().trim();
     
     const dFrom = new Date(document.getElementById('date-from').value);
     const dTo = new Date(document.getElementById('date-to').value);
@@ -93,6 +94,16 @@ function applyFilters() {
                (camTarget === 'All' || d.campaign === camTarget);
                
         if (!textMatch) return false;
+        
+        if (searchTarget !== "") {
+            const ag = d.agency ? d.agency.toLowerCase() : "";
+            const cam = d.campaign ? d.campaign.toLowerCase() : "";
+            const reg = d.region ? d.region.toLowerCase() : "";
+            if (!ag.includes(searchTarget) && !cam.includes(searchTarget) && !reg.includes(searchTarget)) {
+                return false;
+            }
+        }
+
         if (timeTarget === 'All') return true;
         
         // Hide records missing valid dates when a strict date range filter is active
@@ -134,7 +145,39 @@ function renderDashboard() {
     updateTrendChart();
     updateAgencyChart();
     updateRegionChart();
+    renderSummaryTable();
     renderTables();
+}
+
+function renderSummaryTable() {
+    const tableBody = document.querySelector('#table-summary tbody');
+    if (!tableBody) return;
+    let summaryData = {};
+    let grandTotal = 0;
+    
+    filteredData.forEach(d => {
+        const r = d.region || "Unknown";
+        if (!summaryData[r]) {
+            summaryData[r] = { records: 0, campaigns: new Set(), revenue: 0 };
+        }
+        summaryData[r].records += 1;
+        if(d.campaign) summaryData[r].campaigns.add(d.campaign);
+        summaryData[r].revenue += (d.amount || 0);
+        grandTotal += (d.amount || 0);
+    });
+
+    let html = [];
+    for (const [region, data] of Object.entries(summaryData)) {
+        html.push(`<tr>
+            <td>${region}</td>
+            <td>${data.records.toLocaleString('en-IN')}</td>
+            <td>${data.campaigns.size.toLocaleString('en-IN')}</td>
+            <td>₹${(data.revenue / 10000000).toLocaleString('en-IN', {maximumFractionDigits: 2})}</td>
+        </tr>`);
+    }
+
+    tableBody.innerHTML = html.join('');
+    document.getElementById('summary-table-footer-total').textContent = `₹${(grandTotal / 10000000).toLocaleString('en-IN', {maximumFractionDigits: 2})} Cr`;
 }
 
 function renderTables() {

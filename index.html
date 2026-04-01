@@ -69,6 +69,11 @@
                     <option value="All">All Campaigns</option>
                 </select>
             </div>
+            
+            <div class="filter-group">
+                <label for="search-filter">Search</label>
+                <input type="text" id="search-filter" class="search-input" placeholder="Search campaign, agency...">
+            </div>
         </section>
 
         <section class="tabs-nav glass-panel">
@@ -119,6 +124,24 @@
                 <div class="canvas-wrapper">
                     <canvas id="regionChart"></canvas>
                 </div>
+            </div>
+        </section>
+
+        <section class="summary-table-section glass-panel" style="margin-top: 1.5rem; animation: slideUp 0.6s ease forwards; animation-delay: 0.4s; opacity: 0; padding-top: 1rem;">
+            <h2>Regional Dashboard Summary</h2>
+            <div class="table-container" style="margin-top: 1rem;">
+                <table id="table-summary">
+                    <thead>
+                        <tr><th>Region</th><th>Records</th><th>Unique Campaigns</th><th>Revenue (₹ Cr)</th></tr>
+                    </thead>
+                    <tbody></tbody>
+                    <tfoot>
+                        <tr style="font-weight: bold; font-size: 1.1em; background: rgba(88, 166, 255, 0.15);">
+                            <td colspan="3" style="text-align: right;">Overall Dashboard Total:</td>
+                            <td id="summary-table-footer-total">₹0 Cr</td>
+                        </tr>
+                    </tfoot>
+                </table>
             </div>
         </section>
             </div>

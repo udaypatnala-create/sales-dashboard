@@ -144,7 +144,7 @@ select {
     background-size: 1em;
 }
 
-.date-input {
+.date-input, .search-input {
     width: 100%;
     padding: 0.8rem 1rem;
     border-radius: 8px;
@@ -155,6 +155,10 @@ select {
     font-size: 0.95rem;
     outline: none;
     color-scheme: dark;
+}
+
+.search-input::placeholder {
+    color: var(--text-muted);
 }
 
 select:focus, select:hover {
