@@ -22,7 +22,7 @@ body {
     color: var(--text-color);
     font-family: var(--font-family);
     min-height: 100vh;
-    padding: 2rem;
+    padding: 1rem;
     position: relative;
     overflow-x: hidden;
 }
@@ -78,7 +78,7 @@ body {
 
 /* Layout */
 .dashboard-container {
-    max-width: 1400px;
+    max-width: 100%;
     margin: 0 auto;
     display: flex;
     flex-direction: column;
