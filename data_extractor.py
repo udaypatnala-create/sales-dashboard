@@ -25,8 +25,7 @@ def process_excel():
     
     all_data = []
 
-    # Helper function to append
-    def add_record(region, month_year, client, campaign, ops, status, ro_amount, billing_amt, start_dt, end_dt, sales, platform=""):
+    def add_record(region, month_year, client, campaign, ops, status, ro_amount, billing_amt, start_dt, end_dt, sales, platform="", **kwargs):
         date_str = ""
         if pd.notna(month_year) and isinstance(month_year, pd.Timestamp):
             date_str = month_year.strftime('%Y-%m-%d')
@@ -54,14 +53,22 @@ def process_excel():
             "sales_contact": safe_str(sales),
             "platform": safe_str(platform),
             "currency": "INR", # default to INR from excel
-            "exchange_rate": 1.0
+            "exchange_rate": 1.0,
+            "ro_date": safe_str(kwargs.get('ro_date')),
+            "ro_number": safe_str(kwargs.get('ro_number')),
+            "series": safe_str(kwargs.get('series')),
+            "order_id": safe_str(kwargs.get('order_id')),
+            "inv_date": safe_str(kwargs.get('inv_date')),
+            "inv_number": safe_str(kwargs.get('inv_number')),
+            "comment": safe_str(kwargs.get('comment')),
+            "country": safe_str(kwargs.get('country'))
         })
 
     if 'India Campaigns' in xl.sheet_names:
         df = pd.read_excel(xl, sheet_name='India Campaigns')
         for _, row in df.iterrows():
             if pd.isna(row.get('Month & Year')): continue
-            add_record('India', row.get('Month & Year'), row.get('Client Name'), row.get('Indian Campaign Name'), row.get('Ops Name'), row.get('Status'), row.get('RO Amount'), row.get('Billing Amt'), row.get('Start Dt'), row.get('End Date'), row.get('Sales Contact'), row.get('Platform'))
+            add_record('India', row.get('Month & Year'), row.get('Client Name'), row.get('Indian Campaign Name'), row.get('Ops Name'), row.get('Status'), row.get('RO Amount'), row.get('Billing Amt'), row.get('Start Dt'), row.get('End Date'), row.get('Sales Contact'), row.get('Platform'), ro_date=row.get('RO /IO/Agreement  Date'), ro_number=row.get('RO#'), series=row.get('Series'), order_id=row.get('Order ID'), inv_date=row.get('Inv Date'), inv_number=row.get('Inv #'), comment=row.get('Comment (if any)'))
 
     if 'Foreign Campaigns' in xl.sheet_names:
         df = pd.read_excel(xl, sheet_name='Foreign Campaigns')
@@ -70,7 +77,7 @@ def process_excel():
             # If INR RO AMOUNT exists, use it, else RO Amount
             ro = row.get('INR RO AMOUNT')
             if pd.isna(ro) or ro == 0: ro = row.get('RO Amount')
-            add_record('Foreign', row.get('Month & Year'), row.get('Client Name'), row.get('Campaign Name'), row.get('Ops Name'), row.get('Status'), ro, row.get('Billing Amt'), row.get('Start Dt'), row.get('End Date'), row.get('Sales Contact'), row.get('Platform'))
+            add_record('Foreign', row.get('Month & Year'), row.get('Client Name'), row.get('Campaign Name'), row.get('Ops Name'), row.get('Status'), ro, row.get('Billing Amt'), row.get('Start Dt'), row.get('End Date'), row.get('Sales Contact'), row.get('Platform'), ro_date=row.get('RO /IO/Agreement  Date'), ro_number=row.get('RO#'), series=row.get('Series'), order_id=row.get('Order ID'), inv_date=row.get('Inv Date'), inv_number=row.get('Inv #'), comment=row.get('Comment (if any)'), country=row.get('Country'))
 
     if 'Streaming Ads ' in xl.sheet_names:
         df = pd.read_excel(xl, sheet_name='Streaming Ads ')
@@ -78,7 +85,7 @@ def process_excel():
             if pd.isna(row.get('Month & Year')): continue
             ro = row.get('INR RO AMOUNT')
             if pd.isna(ro) or ro == 0: ro = row.get('RO Amount')
-            add_record('Streaming', row.get('Month & Year'), row.get('Client Name'), row.get('Campaign Name'), row.get('Ops Name'), row.get('Status'), ro, row.get('Billing Amt'), row.get('Start Dt'), row.get('End Date'), row.get('Sales Contact'), row.get('Platform'))
+            add_record('Streaming', row.get('Month & Year'), row.get('Client Name'), row.get('Campaign Name'), row.get('Ops Name'), row.get('Status'), ro, row.get('Billing Amt'), row.get('Start Dt'), row.get('End Date'), row.get('Sales Contact'), row.get('Platform'), ro_date=row.get('RO /IO/Agreement  Date'), ro_number=row.get('RO#'), series=row.get('Series'), order_id=row.get('Order ID'), inv_date=row.get('Inv Date'), inv_number=row.get('Inv #'), comment=row.get('Comment (if any)'), country=row.get('REGION'))
 
     if 'Google & Networks' in xl.sheet_names:
         df = pd.read_excel(xl, sheet_name='Google & Networks', header=1)

@@ -291,7 +291,7 @@ function renderTables() {
     const maxRows = 1000;
     
     filteredData.forEach(d => {
-        // Date | Client Name | Campaign | Ops | Sales | Status | Revenue (₹)
+        // Date | Client Name | Campaign | Ops | Sales | Status | RO Date | RO# | Series | Order ID | Inv Date | Inv# | Comment | Platform | Country | RO Amt | Revenue (₹)
         const row = `<tr>
             <td>${d.date || '-'}</td>
             <td>${d.client_name || '-'}</td>
@@ -299,6 +299,16 @@ function renderTables() {
             <td>${d.ops_name || '-'}</td>
             <td>${d.sales_contact || '-'}</td>
             <td>${getStatusBadge(d.status)}</td>
+            <td>${d.ro_date || '-'}</td>
+            <td>${d.ro_number || '-'}</td>
+            <td>${d.series || '-'}</td>
+            <td>${d.order_id || '-'}</td>
+            <td>${d.inv_date || '-'}</td>
+            <td>${d.inv_number || '-'}</td>
+            <td>${d.comment || '-'}</td>
+            <td>${d.platform || '-'}</td>
+            <td>${d.country || '-'}</td>
+            <td>₹${(d.ro_amount || 0).toLocaleString('en-IN', {maximumFractionDigits: 2})}</td>
             <td>₹${(d.amount || 0).toLocaleString('en-IN', {maximumFractionDigits: 2})}</td>
         </tr>`;
         
