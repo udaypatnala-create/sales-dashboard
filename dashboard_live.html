@@ -10,6 +10,13 @@
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- DOCX Generation Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pizzip/3.1.4/pizzip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pizzip/3.1.4/pizzip-utils.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/docxtemplater/3.37.11/docxtemplater.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+    
     <style>:root {
     --bg-color: #0d1117;
     --text-color: #e6edf3;
@@ -11181,6 +11188,64 @@ function addEventListeners() {
     document.getElementById('add-form').addEventListener('submit', handleAddFormSubmit);
 }
 
+function loadFile(url, callback) {
+    PizZipUtils.getBinaryContent(url, callback);
+}
+
+function handleGenerateClick(e) {
+    const btn = e.target;
+    const id = btn.getAttribute('data-id');
+    const rowData = globalData.find(item => item._id === id);
+    if (!rowData) return;
+
+    // Show generating state
+    const originalText = btn.innerHTML;
+    btn.innerHTML = '⏳...';
+    btn.disabled = true;
+
+    loadFile("invoice_template.docx", function(error, content) {
+        if (error) {
+            alert("Error loading invoice template");
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+            throw error;
+        }
+        
+        try {
+            var zip = new PizZip(content);
+            var doc = new window.docxtemplater(zip, {
+                paragraphLoop: true,
+                linebreaks: true,
+            });
+
+            // Format amount
+            const amtStr = 'Rs. ' + (rowData.amount || 0).toLocaleString('en-IN', {maximumFractionDigits: 2});
+            const d = new Date();
+            const dateStr = d.toLocaleDateString();
+
+            doc.render({
+                client_name: rowData.client_name || "N/A",
+                brand_name: rowData.brand_name || "N/A",
+                campaign_name: rowData.campaign || "N/A",
+                amount: amtStr,
+                date: dateStr
+            });
+
+            var out = doc.getZip().generate({
+                type: "blob",
+                mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+            });
+            saveAs(out, "Invoice_" + (rowData.client_name || "Client").replace(/[^a-z0-9]/gi, '_') + ".docx");
+        } catch (error) {
+            console.error(error);
+            alert("Error generating DOCX");
+        }
+        
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+    });
+}
+
 function handleEditClick(e) {
     const btn = e.target;
     const id = btn.getAttribute('data-id');
@@ -11488,7 +11553,12 @@ function renderTables() {
             <td>${d.country || '-'}</td>
             <td>₹${(d.ro_amount || 0).toLocaleString('en-IN', {maximumFractionDigits: 2})}</td>
             <td>₹${(d.amount || 0).toLocaleString('en-IN', {maximumFractionDigits: 2})}</td>
-            <td><button class="edit-btn" data-id="${d._id}" style="padding: 4px 8px; font-size: 0.9em; background: rgba(88, 166, 255, 0.2); border: none; border-radius: 4px; color: #58a6ff; cursor: pointer;">✎ Edit</button></td>
+            <td>
+                <div style="display: flex; gap: 0.5rem;">
+                    <button class="edit-btn" data-id="${d._id}" style="padding: 4px 8px; font-size: 0.9em; background: rgba(88, 166, 255, 0.2); border: none; border-radius: 4px; color: #58a6ff; cursor: pointer;">✎ Edit</button>
+                    <button class="generate-btn" data-id="${d._id}" style="padding: 4px 8px; font-size: 0.9em; background: rgba(46, 160, 67, 0.2); border: none; border-radius: 4px; color: #3fb950; cursor: pointer;">📄 Generate</button>
+                </div>
+            </td>
         </tr>`;
         
         if (d.region === "India") {
@@ -11507,9 +11577,12 @@ function renderTables() {
     if(tableExport) tableExport.innerHTML = expHtml.join('');
     if(tablePg) tablePg.innerHTML = pgHtml.join('');
 
-    // Attach edit listeners
+    // Attach edit and generate listeners
     document.querySelectorAll('.edit-btn').forEach(btn => {
         btn.addEventListener('click', handleEditClick);
+    });
+    document.querySelectorAll('.generate-btn').forEach(btn => {
+        btn.addEventListener('click', handleGenerateClick);
     });
 
     const fInd = `₹${(indTotal / 100000).toLocaleString('en-IN', {maximumFractionDigits: 2})} L`;
