@@ -7564,14 +7564,13 @@ function addEventListeners() {
         }
     });
 
-    document.querySelectorAll('.tab-btn').forEach(btn => {
-        if(btn.id === 'btn-add-item' || btn.id === 'btn-cancel' || btn.type === 'submit') return;
+    document.querySelectorAll('.tabs-nav .tab-btn').forEach(btn => {
         btn.addEventListener('click', (e) => {
             document.querySelectorAll('.tabs-nav .tab-btn').forEach(b => b.classList.remove('active'));
             document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
             
-            e.target.classList.add('active');
-            const targetId = e.target.getAttribute('data-tab');
+            btn.classList.add('active');
+            const targetId = btn.getAttribute('data-tab');
             if(targetId) {
                 document.getElementById(targetId).classList.add('active');
             }
