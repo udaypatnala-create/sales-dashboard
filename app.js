@@ -87,18 +87,32 @@ function addEventListeners() {
         }
     });
 
-    document.querySelectorAll('.tabs-nav .tab-btn').forEach(btn => {
+    document.querySelectorAll('.sidebar-link').forEach(btn => {
         btn.addEventListener('click', (e) => {
-            document.querySelectorAll('.tabs-nav .tab-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.sidebar-link').forEach(b => b.classList.remove('active'));
             document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
             
-            btn.classList.add('active');
-            const targetId = btn.getAttribute('data-tab');
-            if(targetId) {
-                document.getElementById(targetId).classList.add('active');
+            // Add active class to clicked button
+            let targetBtn = e.target.closest('.sidebar-link');
+            if (targetBtn) {
+                targetBtn.classList.add('active');
+                const targetId = targetBtn.getAttribute('data-tab');
+                if(targetId) {
+                    document.getElementById(targetId).classList.add('active');
+                }
             }
         });
     });
+
+    const toggleSidebarBtn = document.getElementById('toggle-sidebar');
+    if(toggleSidebarBtn) {
+        toggleSidebarBtn.addEventListener('click', () => {
+            const sidebar = document.getElementById('sidebar');
+            if(sidebar) {
+                sidebar.classList.toggle('collapsed');
+            }
+        });
+    }
 
     // Modal Events
     document.getElementById('btn-add-item').addEventListener('click', () => {

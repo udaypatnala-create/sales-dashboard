@@ -89,9 +89,121 @@ body {
 }
 
 /* Layout */
+.app-layout {
+    display: flex;
+    min-height: calc(100vh - 2rem);
+    gap: 1.5rem;
+}
+
+.sidebar {
+    width: 250px;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    padding: 1.5rem;
+    transition: width var(--transition-speed) ease;
+    overflow: hidden;
+}
+
+.sidebar.collapsed {
+    width: 85px;
+}
+
+.sidebar-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 2rem;
+}
+
+.sidebar-title {
+    font-size: 1.2rem;
+    font-weight: 600;
+    transition: opacity var(--transition-speed) ease;
+    white-space: nowrap;
+}
+
+.sidebar.collapsed .sidebar-title {
+    opacity: 0;
+    pointer-events: none;
+    position: absolute;
+}
+
+.icon-btn {
+    background: none;
+    border: none;
+    color: var(--text-color);
+    font-size: 1.5rem;
+    cursor: pointer;
+    transition: color 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.sidebar.collapsed .icon-btn {
+    margin: 0 auto;
+}
+
+.icon-btn:hover {
+    color: var(--accent-color);
+}
+
+.sidebar-nav {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.sidebar-link {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--glass-border);
+    border-radius: 8px;
+    color: var(--text-muted);
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-align: left;
+    white-space: nowrap;
+}
+
+.sidebar-link:hover {
+    background: rgba(255, 255, 255, 0.08);
+    color: var(--text-color);
+}
+
+.sidebar-link.active {
+    background: rgba(88, 166, 255, 0.15);
+    border-color: rgba(88, 166, 255, 0.3);
+    color: var(--accent-color);
+}
+
+.sidebar-link .icon {
+    font-size: 1.2rem;
+    min-width: 24px;
+    text-align: center;
+}
+
+.sidebar.collapsed .sidebar-link .text {
+    opacity: 0;
+    pointer-events: none;
+    position: absolute;
+}
+
+.main-content {
+    flex-grow: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+}
+
 .dashboard-container {
     max-width: 100%;
-    margin: 0 auto;
     display: flex;
     flex-direction: column;
     gap: 1.5rem;
@@ -452,7 +564,32 @@ tbody tr:hover {
     <div class="blob-bg blob-1"></div>
     <div class="blob-bg blob-2"></div>
     
-    <div class="dashboard-container">
+    <div class="app-layout">
+        <!-- Sidebar -->
+        <aside class="sidebar glass-panel" id="sidebar">
+            <div class="sidebar-header">
+                <h2 class="sidebar-title">Menu</h2>
+                <button id="toggle-sidebar" class="icon-btn">☰</button>
+            </div>
+            <nav class="sidebar-nav">
+                <button class="sidebar-link active" data-tab="tab-dashboard">
+                    <span class="icon">📊</span><span class="text">Graphical Dashboard</span>
+                </button>
+                <button class="sidebar-link" data-tab="tab-india">
+                    <span class="icon">🇮🇳</span><span class="text">India Sales</span>
+                </button>
+                <button class="sidebar-link" data-tab="tab-export">
+                    <span class="icon">✈️</span><span class="text">Export Sales</span>
+                </button>
+                <button class="sidebar-link" data-tab="tab-pg">
+                    <span class="icon">💳</span><span class="text">PG Sales</span>
+                </button>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <div class="dashboard-container">
         
         <header class="glass-panel" style="display: flex; justify-content: space-between; align-items: center; padding: 2rem;">
             <div>
@@ -515,12 +652,6 @@ tbody tr:hover {
             </div>
         </section>
 
-        <section class="tabs-nav glass-panel">
-            <button class="tab-btn active" data-tab="tab-dashboard">Graphical Dashboard</button>
-            <button class="tab-btn" data-tab="tab-india">India Sales</button>
-            <button class="tab-btn" data-tab="tab-export">Export Sales</button>
-            <button class="tab-btn" data-tab="tab-pg">PG Sales</button>
-        </section>
 
         <div class="tab-content-container">
             <div class="tab-pane active" id="tab-dashboard">
@@ -640,8 +771,10 @@ tbody tr:hover {
             </div>
         </div>
         
-    </div>
-    
+        </div> <!-- end dashboard-container -->
+        </main> <!-- end main-content -->
+    </div> <!-- end app-layout -->
+
     <!-- Add New Item Modal -->
     <div id="add-modal" class="modal-overlay">
         <div class="modal-content glass-panel">
@@ -11004,18 +11137,32 @@ function addEventListeners() {
         }
     });
 
-    document.querySelectorAll('.tabs-nav .tab-btn').forEach(btn => {
+    document.querySelectorAll('.sidebar-link').forEach(btn => {
         btn.addEventListener('click', (e) => {
-            document.querySelectorAll('.tabs-nav .tab-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.sidebar-link').forEach(b => b.classList.remove('active'));
             document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
             
-            btn.classList.add('active');
-            const targetId = btn.getAttribute('data-tab');
-            if(targetId) {
-                document.getElementById(targetId).classList.add('active');
+            // Add active class to clicked button
+            let targetBtn = e.target.closest('.sidebar-link');
+            if (targetBtn) {
+                targetBtn.classList.add('active');
+                const targetId = targetBtn.getAttribute('data-tab');
+                if(targetId) {
+                    document.getElementById(targetId).classList.add('active');
+                }
             }
         });
     });
+
+    const toggleSidebarBtn = document.getElementById('toggle-sidebar');
+    if(toggleSidebarBtn) {
+        toggleSidebarBtn.addEventListener('click', () => {
+            const sidebar = document.getElementById('sidebar');
+            if(sidebar) {
+                sidebar.classList.toggle('collapsed');
+            }
+        });
+    }
 
     // Modal Events
     document.getElementById('btn-add-item').addEventListener('click', () => {

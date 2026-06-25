@@ -16,7 +16,32 @@
     <div class="blob-bg blob-1"></div>
     <div class="blob-bg blob-2"></div>
     
-    <div class="dashboard-container">
+    <div class="app-layout">
+        <!-- Sidebar -->
+        <aside class="sidebar glass-panel" id="sidebar">
+            <div class="sidebar-header">
+                <h2 class="sidebar-title">Menu</h2>
+                <button id="toggle-sidebar" class="icon-btn">☰</button>
+            </div>
+            <nav class="sidebar-nav">
+                <button class="sidebar-link active" data-tab="tab-dashboard">
+                    <span class="icon">📊</span><span class="text">Graphical Dashboard</span>
+                </button>
+                <button class="sidebar-link" data-tab="tab-india">
+                    <span class="icon">🇮🇳</span><span class="text">India Sales</span>
+                </button>
+                <button class="sidebar-link" data-tab="tab-export">
+                    <span class="icon">✈️</span><span class="text">Export Sales</span>
+                </button>
+                <button class="sidebar-link" data-tab="tab-pg">
+                    <span class="icon">💳</span><span class="text">PG Sales</span>
+                </button>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <div class="dashboard-container">
         
         <header class="glass-panel" style="display: flex; justify-content: space-between; align-items: center; padding: 2rem;">
             <div>
@@ -79,12 +104,6 @@
             </div>
         </section>
 
-        <section class="tabs-nav glass-panel">
-            <button class="tab-btn active" data-tab="tab-dashboard">Graphical Dashboard</button>
-            <button class="tab-btn" data-tab="tab-india">India Sales</button>
-            <button class="tab-btn" data-tab="tab-export">Export Sales</button>
-            <button class="tab-btn" data-tab="tab-pg">PG Sales</button>
-        </section>
 
         <div class="tab-content-container">
             <div class="tab-pane active" id="tab-dashboard">
@@ -204,8 +223,10 @@
             </div>
         </div>
         
-    </div>
-    
+        </div> <!-- end dashboard-container -->
+        </main> <!-- end main-content -->
+    </div> <!-- end app-layout -->
+
     <!-- Add New Item Modal -->
     <div id="add-modal" class="modal-overlay">
         <div class="modal-content glass-panel">
