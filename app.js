@@ -10,6 +10,11 @@ async function init() {
     try {
         const response = await fetch('data.json');
         globalData = await response.json();
+        
+        // Load custom items from local storage
+        const localItems = JSON.parse(localStorage.getItem('customBillingItems') || '[]');
+        globalData = [...globalData, ...localItems];
+        
         filteredData = [...globalData];
         
         populateFilters();
@@ -29,54 +34,136 @@ function processOptions(key) {
 }
 
 function populateFilters() {
-    const ffy = document.getElementById('fy-filter');
     const freg = document.getElementById('region-filter');
-    const fag = document.getElementById('agency-filter');
-    const fcam = document.getElementById('campaign-filter');
+    const fclient = document.getElementById('client-filter');
+    const fops = document.getElementById('ops-filter');
+    const fsales = document.getElementById('sales-filter');
 
-    processOptions('fy').forEach(opt => ffy.add(new Option(opt, opt)));
+    // Clear existing options except "All"
+    freg.innerHTML = '<option value="All">All Regions</option>';
+    fclient.innerHTML = '<option value="All">All Clients</option>';
+    fops.innerHTML = '<option value="All">All Ops</option>';
+    fsales.innerHTML = '<option value="All">All Sales</option>';
+
     processOptions('region').forEach(opt => freg.add(new Option(opt, opt)));
-    processOptions('agency').forEach(opt => fag.add(new Option(opt, opt)));
-    
-    // Some campaigns might be too long or null
-    processOptions('campaign').forEach(opt => {
+    processOptions('client_name').forEach(opt => {
         const label = opt.length > 50 ? opt.substring(0, 50) + "..." : opt;
-        fcam.add(new Option(label, opt));
+        fclient.add(new Option(label, opt));
     });
+    processOptions('ops_name').forEach(opt => fops.add(new Option(opt, opt)));
+    processOptions('sales_contact').forEach(opt => fsales.add(new Option(opt, opt)));
 }
 
 function addEventListeners() {
-    ['fy-filter', 'region-filter', 'agency-filter', 'campaign-filter', 'time-filter', 'date-from', 'date-to', 'search-filter'].forEach(id => {
-        document.getElementById(id).addEventListener('change', (e) => {
+    ['region-filter', 'client-filter', 'ops-filter', 'sales-filter', 'time-filter', 'date-from', 'date-to', 'search-filter'].forEach(id => {
+        const el = document.getElementById(id);
+        if(!el) return;
+        el.addEventListener('change', (e) => {
             if (id === 'time-filter') {
                 document.getElementById('custom-date-group').style.display = e.target.value === 'Custom' ? 'flex' : 'none';
             }
             applyFilters();
         });
         
-        // Also fire instantly while typing on Custom dates or search
         if (id.startsWith('date-') || id === 'search-filter') {
-            document.getElementById(id).addEventListener('input', applyFilters);
+            el.addEventListener('input', applyFilters);
         }
     });
 
     document.querySelectorAll('.tab-btn').forEach(btn => {
+        if(btn.id === 'btn-add-item' || btn.id === 'btn-cancel' || btn.type === 'submit') return;
         btn.addEventListener('click', (e) => {
-            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.tabs-nav .tab-btn').forEach(b => b.classList.remove('active'));
             document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
             
             e.target.classList.add('active');
             const targetId = e.target.getAttribute('data-tab');
-            document.getElementById(targetId).classList.add('active');
+            if(targetId) {
+                document.getElementById(targetId).classList.add('active');
+            }
         });
     });
+
+    // Modal Events
+    document.getElementById('btn-add-item').addEventListener('click', () => {
+        document.getElementById('add-modal').classList.add('active');
+    });
+
+    document.getElementById('btn-cancel').addEventListener('click', () => {
+        document.getElementById('add-modal').classList.remove('active');
+    });
+
+    document.getElementById('add-form').addEventListener('submit', handleAddFormSubmit);
+}
+
+function handleAddFormSubmit(e) {
+    e.preventDefault();
+    const region = document.getElementById('new-region').value;
+    const client = document.getElementById('new-client').value;
+    const campaign = document.getElementById('new-campaign').value;
+    const ops = document.getElementById('new-ops').value;
+    const sales = document.getElementById('new-sales').value;
+    const status = document.getElementById('new-status').value;
+    const billType = document.getElementById('new-billing-type').value;
+    const rawRo = parseFloat(document.getElementById('new-ro').value) || 0;
+    const currency = document.getElementById('new-currency').value;
+    const exchange = parseFloat(document.getElementById('new-exchange').value) || 1;
+    const startDt = document.getElementById('new-start').value;
+    const endDt = document.getElementById('new-end').value;
+
+    const roInr = rawRo * exchange;
+
+    let newItems = [];
+    
+    if (billType === 'Monthly' && startDt && endDt) {
+        const sDate = new Date(startDt);
+        const eDate = new Date(endDt);
+        
+        let months = (eDate.getFullYear() - sDate.getFullYear()) * 12;
+        months -= sDate.getMonth();
+        months += eDate.getMonth();
+        months = months <= 0 ? 1 : months + 1; // inclusive of start and end month
+
+        const monthlyRo = roInr / months;
+
+        for (let i = 0; i < months; i++) {
+            let splitDate = new Date(sDate.getFullYear(), sDate.getMonth() + i, 1);
+            let dateStr = splitDate.toISOString().split('T')[0];
+            
+            newItems.push({
+                region, date: dateStr, client_name: client, campaign, ops_name: ops,
+                status, ro_amount: roInr, amount: monthlyRo, start_dt: startDt, end_dt: endDt,
+                sales_contact: sales, platform: "", currency, exchange_rate: exchange
+            });
+        }
+    } else {
+        // End of campaign or no valid dates
+        newItems.push({
+            region, date: endDt || startDt, client_name: client, campaign, ops_name: ops,
+            status, ro_amount: roInr, amount: roInr, start_dt: startDt, end_dt: endDt,
+            sales_contact: sales, platform: "", currency, exchange_rate: exchange
+        });
+    }
+
+    const localItems = JSON.parse(localStorage.getItem('customBillingItems') || '[]');
+    localItems.push(...newItems);
+    localStorage.setItem('customBillingItems', JSON.stringify(localItems));
+
+    globalData.push(...newItems);
+    
+    // reset form and close
+    document.getElementById('add-form').reset();
+    document.getElementById('add-modal').classList.remove('active');
+    
+    populateFilters();
+    applyFilters();
 }
 
 function applyFilters() {
-    const fyTarget = document.getElementById('fy-filter').value;
     const regTarget = document.getElementById('region-filter').value;
-    const agTarget = document.getElementById('agency-filter').value;
-    const camTarget = document.getElementById('campaign-filter').value;
+    const clientTarget = document.getElementById('client-filter').value;
+    const opsTarget = document.getElementById('ops-filter').value;
+    const salesTarget = document.getElementById('sales-filter').value;
     const timeTarget = document.getElementById('time-filter').value;
     const searchTarget = document.getElementById('search-filter').value.toLowerCase().trim();
     
@@ -88,26 +175,26 @@ function applyFilters() {
     const currentYear = now.getFullYear();
 
     filteredData = globalData.filter(d => {
-        let textMatch = (fyTarget === 'All' || d.fy === fyTarget) &&
-               (regTarget === 'All' || d.region === regTarget) &&
-               (agTarget === 'All' || d.agency === agTarget) &&
-               (camTarget === 'All' || d.campaign === camTarget);
+        let textMatch = (regTarget === 'All' || d.region === regTarget) &&
+               (clientTarget === 'All' || d.client_name === clientTarget) &&
+               (opsTarget === 'All' || d.ops_name === opsTarget) &&
+               (salesTarget === 'All' || d.sales_contact === salesTarget);
                
         if (!textMatch) return false;
         
         if (searchTarget !== "") {
-            const ag = d.agency ? d.agency.toLowerCase() : "";
+            const cl = d.client_name ? d.client_name.toLowerCase() : "";
             const cam = d.campaign ? d.campaign.toLowerCase() : "";
-            const reg = d.region ? d.region.toLowerCase() : "";
-            if (!ag.includes(searchTarget) && !cam.includes(searchTarget) && !reg.includes(searchTarget)) {
+            const op = d.ops_name ? d.ops_name.toLowerCase() : "";
+            const sa = d.sales_contact ? d.sales_contact.toLowerCase() : "";
+            if (!cl.includes(searchTarget) && !cam.includes(searchTarget) && !op.includes(searchTarget) && !sa.includes(searchTarget)) {
                 return false;
             }
         }
 
         if (timeTarget === 'All') return true;
         
-        // Hide records missing valid dates when a strict date range filter is active
-        if (!d.date || d.date === 'Unknown') return false;
+        if (!d.date || d.date === 'Unknown' || d.date === '') return false;
         
         const itemDate = new Date(d.date);
         if (isNaN(itemDate.getTime())) return false;
@@ -121,7 +208,6 @@ function applyFilters() {
             return itemDate.getMonth() === lm && itemDate.getFullYear() === ly;
         } else if (timeTarget === 'Custom') {
             if (!isNaN(dFrom.getTime()) && itemDate < dFrom) return false;
-            // Shift to end of day for precise inclusive filtering
             if (!isNaN(dTo.getTime())) {
                 const toEnd = new Date(dTo.getTime());
                 toEnd.setHours(23, 59, 59, 999);
@@ -134,16 +220,26 @@ function applyFilters() {
     renderDashboard();
 }
 
+function getStatusBadge(statusStr) {
+    if(!statusStr) return '-';
+    let s = statusStr.toLowerCase();
+    if(s.includes('yet to start')) return `<span class="badge badge-grey">${statusStr}</span>`;
+    if(s.includes('delivering')) return `<span class="badge badge-green">${statusStr}</span>`;
+    if(s.includes('stop') || s.includes('complet') || s.includes('paus')) return `<span class="badge badge-red">${statusStr}</span>`;
+    if(s.includes('invoice')) return `<span class="badge badge-blue">${statusStr}</span>`;
+    return `<span class="badge badge-grey">${statusStr}</span>`;
+}
+
 function renderDashboard() {
     const totalRev = filteredData.reduce((sum, d) => sum + (d.amount || 0), 0);
     const totalCamp = new Set(filteredData.map(d => d.campaign)).size;
     
-    document.getElementById('kpi-revenue').textContent = `₹${(totalRev / 10000000).toLocaleString('en-IN', { maximumFractionDigits: 2 })} Cr`;
+    document.getElementById('kpi-revenue').textContent = `₹${(totalRev / 100000).toLocaleString('en-IN', { maximumFractionDigits: 2 })} L`;
     document.getElementById('kpi-campaigns').textContent = totalCamp.toLocaleString('en-IN');
     document.getElementById('kpi-records').textContent = filteredData.length.toLocaleString('en-IN');
 
     updateTrendChart();
-    updateAgencyChart();
+    updateClientChart();
     updateRegionChart();
     renderSummaryTable();
     renderTables();
@@ -172,12 +268,12 @@ function renderSummaryTable() {
             <td>${region}</td>
             <td>${data.records.toLocaleString('en-IN')}</td>
             <td>${data.campaigns.size.toLocaleString('en-IN')}</td>
-            <td>₹${(data.revenue / 10000000).toLocaleString('en-IN', {maximumFractionDigits: 2})}</td>
+            <td>₹${(data.revenue / 100000).toLocaleString('en-IN', {maximumFractionDigits: 2})} L</td>
         </tr>`);
     }
 
     tableBody.innerHTML = html.join('');
-    document.getElementById('summary-table-footer-total').textContent = `₹${(grandTotal / 10000000).toLocaleString('en-IN', {maximumFractionDigits: 2})} Cr`;
+    document.getElementById('summary-table-footer-total').textContent = `₹${(grandTotal / 100000).toLocaleString('en-IN', {maximumFractionDigits: 2})} L`;
 }
 
 function renderTables() {
@@ -193,50 +289,53 @@ function renderTables() {
     let expTotal = 0;
     let pgTotal = 0;
     
-    // Performance guard
     const maxRows = 1000;
     
     filteredData.forEach(d => {
+        // Date | Client Name | Campaign | Ops | Sales | Status | Revenue (₹)
         const row = `<tr>
-            <td>${d.fy || '-'}</td>
             <td>${d.date || '-'}</td>
-            <td>${d.agency || '-'}</td>
+            <td>${d.client_name || '-'}</td>
             <td>${d.campaign || '-'}</td>
+            <td>${d.ops_name || '-'}</td>
+            <td>${d.sales_contact || '-'}</td>
+            <td>${getStatusBadge(d.status)}</td>
             <td>₹${(d.amount || 0).toLocaleString('en-IN', {maximumFractionDigits: 2})}</td>
         </tr>`;
         
         if (d.region === "India") {
             indTotal += (d.amount || 0);
             if (indHtml.length < maxRows) indHtml.push(row);
-        } else if (d.region === "Export") {
+        } else if (d.region === "Foreign") {
             expTotal += (d.amount || 0);
             if (expHtml.length < maxRows) expHtml.push(row);
-        } else if (d.region === "PG Sales") {
+        } else if (d.region.includes("PG")) {
             pgTotal += (d.amount || 0);
             if (pgHtml.length < maxRows) pgHtml.push(row);
         }
     });
 
-    tableIndia.innerHTML = indHtml.join('');
-    tableExport.innerHTML = expHtml.join('');
-    tablePg.innerHTML = pgHtml.join('');
+    if(tableIndia) tableIndia.innerHTML = indHtml.join('');
+    if(tableExport) tableExport.innerHTML = expHtml.join('');
+    if(tablePg) tablePg.innerHTML = pgHtml.join('');
 
-    // Update the sub-total headers and footers
-    const fInd = `₹${(indTotal / 10000000).toLocaleString('en-IN', {maximumFractionDigits: 2})} Cr`;
-    const fExp = `₹${(expTotal / 10000000).toLocaleString('en-IN', {maximumFractionDigits: 2})} Cr`;
-    const fPg = `₹${(pgTotal / 10000000).toLocaleString('en-IN', {maximumFractionDigits: 2})} Cr`;
+    const fInd = `₹${(indTotal / 100000).toLocaleString('en-IN', {maximumFractionDigits: 2})} L`;
+    const fExp = `₹${(expTotal / 100000).toLocaleString('en-IN', {maximumFractionDigits: 2})} L`;
+    const fPg = `₹${(pgTotal / 100000).toLocaleString('en-IN', {maximumFractionDigits: 2})} L`;
 
-    document.getElementById('india-total-inr').textContent = `Total: ${fInd}`;
-    document.getElementById('export-total-inr').textContent = `Total: ${fExp}`;
-    document.getElementById('pg-total-inr').textContent = `Total: ${fPg}`;
+    if(document.getElementById('india-total-inr')) document.getElementById('india-total-inr').textContent = `Total: ${fInd}`;
+    if(document.getElementById('export-total-inr')) document.getElementById('export-total-inr').textContent = `Total: ${fExp}`;
+    if(document.getElementById('pg-total-inr')) document.getElementById('pg-total-inr').textContent = `Total: ${fPg}`;
 
-    document.getElementById('india-table-footer-total').textContent = fInd;
-    document.getElementById('export-table-footer-total').textContent = fExp;
-    document.getElementById('pg-table-footer-total').textContent = fPg;
+    if(document.getElementById('india-table-footer-total')) document.getElementById('india-table-footer-total').textContent = fInd;
+    if(document.getElementById('export-table-footer-total')) document.getElementById('export-table-footer-total').textContent = fExp;
+    if(document.getElementById('pg-table-footer-total')) document.getElementById('pg-table-footer-total').textContent = fPg;
 }
 
 function createChart(ctxId, type, data, options) {
-    const ctx = document.getElementById(ctxId).getContext('2d');
+    const el = document.getElementById(ctxId);
+    if(!el) return;
+    const ctx = el.getContext('2d');
     if (charts[ctxId]) {
         charts[ctxId].destroy();
     }
@@ -246,18 +345,20 @@ function createChart(ctxId, type, data, options) {
 function updateTrendChart() {
     const grouped = {};
     filteredData.forEach(d => {
-        const f = d.fy && d.fy !== "Unknown" ? d.fy : "Other";
-        grouped[f] = (grouped[f] || 0) + d.amount;
+        if(!d.date || d.date === 'Unknown' || d.date === '') return;
+        const dObj = new Date(d.date);
+        if(isNaN(dObj.getTime())) return;
+        const key = `${dObj.getFullYear()}-${String(dObj.getMonth()+1).padStart(2, '0')}`;
+        grouped[key] = (grouped[key] || 0) + d.amount;
     });
 
-    const sortedFys = Object.keys(grouped).sort();
-    // Converting to Crores for readability on Y-axis
-    const dataVals = sortedFys.map(f => grouped[f] / 10000000);
+    const sorted = Object.keys(grouped).sort();
+    const dataVals = sorted.map(k => grouped[k] / 100000); // Lakhs
 
     const data = {
-        labels: sortedFys,
+        labels: sorted,
         datasets: [{
-            label: 'Revenue (₹ Cr)',
+            label: 'Revenue (₹ Lakhs)',
             data: dataVals,
             borderColor: '#58a6ff',
             backgroundColor: 'rgba(88, 166, 255, 0.2)',
@@ -265,8 +366,7 @@ function updateTrendChart() {
             fill: true,
             tension: 0.4,
             pointBackgroundColor: '#fff',
-            pointRadius: 5,
-            pointHoverRadius: 8
+            pointRadius: 5
         }]
     };
     
@@ -274,25 +374,17 @@ function updateTrendChart() {
         responsive: true,
         maintainAspectRatio: false,
         plugins: {
-            legend: { display: false },
-            tooltip: {
-                callbacks: {
-                    label: function(context) {
-                        return '₹' + context.parsed.y.toLocaleString('en-IN', {maximumFractionDigits: 2}) + ' Cr';
-                    }
-                }
-            }
+            legend: { display: false }
         }
     };
-
     createChart('trendChart', 'line', data, options);
 }
 
-function updateAgencyChart() {
+function updateClientChart() {
     const grouped = {};
     filteredData.forEach(d => {
-        if (!d.agency || d.agency === "Unknown") return;
-        grouped[d.agency] = (grouped[d.agency] || 0) + d.amount;
+        if (!d.client_name || d.client_name === "Unknown") return;
+        grouped[d.client_name] = (grouped[d.client_name] || 0) + d.amount;
     });
 
     const sorted = Object.entries(grouped)
@@ -303,7 +395,7 @@ function updateAgencyChart() {
         labels: sorted.map(s => s[0].length > 15 ? s[0].slice(0, 15) + '...' : s[0]),
         datasets: [{
             label: 'Revenue',
-            data: sorted.map(s => s[1] / 10000000), // Converted to Cr
+            data: sorted.map(s => s[1] / 100000), // Lakhs
             backgroundColor: 'rgba(132, 60, 250, 0.8)',
             borderRadius: 6
         }]
@@ -313,27 +405,10 @@ function updateAgencyChart() {
         responsive: true,
         maintainAspectRatio: false,
         plugins: {
-            legend: { display: false },
-            tooltip: {
-                callbacks: {
-                    label: function(context) {
-                        return '₹' + context.parsed.y.toLocaleString('en-IN', {maximumFractionDigits: 2}) + ' Cr';
-                    }
-                }
-            }
-        },
-        scales: {
-            x: {
-                ticks: {
-                    autoSkip: false,
-                    maxRotation: 45,
-                    minRotation: 45
-                }
-            }
+            legend: { display: false }
         }
     };
-
-    createChart('agencyChart', 'bar', data, options);
+    createChart('agencyChart', 'bar', data, options); // using existing canvas ID
 }
 
 function updateRegionChart() {
@@ -346,12 +421,8 @@ function updateRegionChart() {
     const data = {
         labels: Object.keys(grouped),
         datasets: [{
-            data: Object.values(grouped).map(v => v / 10000000),
-            backgroundColor: [
-                '#353ae6',
-                '#843cfa',
-                '#fa3cc3'
-            ],
+            data: Object.values(grouped).map(v => v / 100000),
+            backgroundColor: ['#353ae6', '#843cfa', '#fa3cc3', '#2ea043', '#58a6ff', '#f85149'],
             borderWidth: 0,
             hoverOffset: 12
         }]
@@ -364,18 +435,10 @@ function updateRegionChart() {
             legend: {
                 position: 'right',
                 labels: { color: '#e6edf3', padding: 20 }
-            },
-            tooltip: {
-                callbacks: {
-                    label: function(context) {
-                        return '₹' + context.parsed.toLocaleString('en-IN', {maximumFractionDigits: 2}) + ' Cr';
-                    }
-                }
             }
         },
         cutout: '75%'
     };
-
     createChart('regionChart', 'doughnut', data, options);
 }
 

@@ -18,19 +18,15 @@
     
     <div class="dashboard-container">
         
-        <header class="glass-panel">
-            <h1>Sales Performance Dashboard</h1>
-            <p>Comprehensive Multi-Year Revenue Overview</p>
+        <header class="glass-panel" style="display: flex; justify-content: space-between; align-items: center; padding: 2rem;">
+            <div>
+                <h1 style="text-align: left;">Sales Performance Dashboard</h1>
+                <p style="text-align: left;">Comprehensive Multi-Year Revenue Overview</p>
+            </div>
+            <button id="btn-add-item" class="tab-btn active" style="font-size: 1.1rem; padding: 1rem 2rem;">+ Add New Item</button>
         </header>
 
         <section class="filters glass-panel">
-            <div class="filter-group">
-                <label for="fy-filter">Financial Year</label>
-                <select id="fy-filter">
-                    <option value="All">All Years</option>
-                </select>
-            </div>
-            
             <div class="filter-group">
                 <label for="time-filter">Date Filter</label>
                 <select id="time-filter">
@@ -41,7 +37,7 @@
                 </select>
             </div>
             
-            <div class="filter-group" id="custom-date-group" style="display: none; min-width: 250px;">
+            <div class="filter-group" id="custom-date-group" style="display: none; flex: 2; min-width: 320px;">
                 <label>Custom Range (From - To)</label>
                 <div style="display:flex; gap:0.5rem">
                     <input type="date" id="date-from" class="date-input">
@@ -50,29 +46,36 @@
             </div>
             
             <div class="filter-group">
-                <label for="region-filter">Region</label>
+                <label for="region-filter">Region/Sheet</label>
                 <select id="region-filter">
                     <option value="All">All Regions</option>
                 </select>
             </div>
             
             <div class="filter-group">
-                <label for="agency-filter">Agency</label>
-                <select id="agency-filter">
-                    <option value="All">All Agencies</option>
+                <label for="client-filter">Client Name</label>
+                <select id="client-filter">
+                    <option value="All">All Clients</option>
+                </select>
+            </div>
+
+            <div class="filter-group">
+                <label for="ops-filter">Ops Name</label>
+                <select id="ops-filter">
+                    <option value="All">All Ops</option>
+                </select>
+            </div>
+
+            <div class="filter-group">
+                <label for="sales-filter">Sales Contact</label>
+                <select id="sales-filter">
+                    <option value="All">All Sales</option>
                 </select>
             </div>
             
             <div class="filter-group">
-                <label for="campaign-filter">Campaign</label>
-                <select id="campaign-filter">
-                    <option value="All">All Campaigns</option>
-                </select>
-            </div>
-            
-            <div class="filter-group">
-                <label for="search-filter">Search</label>
-                <input type="text" id="search-filter" class="search-input" placeholder="Search campaign, agency...">
+                <label for="search-filter">Global Search</label>
+                <input type="text" id="search-filter" class="search-input" placeholder="Search campaign, client, ops...">
             </div>
         </section>
 
@@ -113,7 +116,7 @@
             </div>
             
             <div class="chart-container glass-panel">
-                <h2>Top 10 Agencies</h2>
+                <h2>Top 10 Clients</h2>
                 <div class="canvas-wrapper">
                     <canvas id="agencyChart"></canvas>
                 </div>
@@ -151,7 +154,7 @@
                 <div class="table-container">
                     <table id="table-india">
                         <thead>
-                            <tr><th>FY</th><th>Date</th><th>Agency</th><th>Campaign</th><th>Revenue (₹)</th></tr>
+                            <tr><th>Date</th><th>Client Name</th><th>Campaign</th><th>Ops</th><th>Sales</th><th>Status</th><th>Revenue (₹)</th></tr>
                         </thead>
                         <tbody></tbody>
                         <tfoot>
@@ -169,7 +172,7 @@
                 <div class="table-container">
                     <table id="table-export">
                         <thead>
-                            <tr><th>FY</th><th>Date</th><th>Agency</th><th>Campaign</th><th>Revenue (₹)</th></tr>
+                            <tr><th>Date</th><th>Client Name</th><th>Campaign</th><th>Ops</th><th>Sales</th><th>Status</th><th>Revenue (₹)</th></tr>
                         </thead>
                         <tbody></tbody>
                         <tfoot>
@@ -187,7 +190,7 @@
                 <div class="table-container">
                     <table id="table-pg">
                         <thead>
-                            <tr><th>FY</th><th>Date</th><th>Agency</th><th>Campaign</th><th>Revenue (₹)</th></tr>
+                            <tr><th>Date</th><th>Client Name</th><th>Campaign</th><th>Ops</th><th>Sales</th><th>Status</th><th>Revenue (₹)</th></tr>
                         </thead>
                         <tbody></tbody>
                         <tfoot>
@@ -203,6 +206,90 @@
         
     </div>
     
+    <!-- Add New Item Modal -->
+    <div id="add-modal" class="modal-overlay">
+        <div class="modal-content glass-panel">
+            <h2>Add New Billing Item</h2>
+            <form id="add-form">
+                <div class="form-grid">
+                    <div class="filter-group">
+                        <label>Region/Sheet</label>
+                        <select id="new-region" required>
+                            <option value="India">India Campaigns</option>
+                            <option value="Foreign">Foreign Campaigns</option>
+                            <option value="Google & Networks">Google & Networks</option>
+                            <option value="PG Sales">PG Sales</option>
+                            <option value="PG Deals">PG Deals</option>
+                            <option value="Streaming">Streaming Ads</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label>Client Name</label>
+                        <input type="text" id="new-client" class="search-input" required>
+                    </div>
+                    <div class="filter-group">
+                        <label>Campaign Name</label>
+                        <input type="text" id="new-campaign" class="search-input" required>
+                    </div>
+                    <div class="filter-group">
+                        <label>Ops Name</label>
+                        <input type="text" id="new-ops" class="search-input">
+                    </div>
+                    <div class="filter-group">
+                        <label>Sales Contact</label>
+                        <input type="text" id="new-sales" class="search-input">
+                    </div>
+                    <div class="filter-group">
+                        <label>Status</label>
+                        <select id="new-status" required>
+                            <option value="Yet to start">Yet to start</option>
+                            <option value="Delivering">Delivering</option>
+                            <option value="Paused">Paused/Stopped</option>
+                            <option value="Invoice raised">Invoice raised</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label>Billing Type</label>
+                        <select id="new-billing-type">
+                            <option value="End">End of campaign billing</option>
+                            <option value="Monthly">Monthly billing (Split)</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label>Total RO Amount</label>
+                        <input type="number" step="0.01" id="new-ro" class="search-input" required>
+                    </div>
+                    <div class="filter-group">
+                        <label>Currency</label>
+                        <select id="new-currency">
+                            <option value="INR">INR (₹)</option>
+                            <option value="USD">USD ($)</option>
+                            <option value="EUR">Euros (€)</option>
+                            <option value="GBP">Pounds (£)</option>
+                            <option value="CAD">CAD ($)</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label>Exchange Rate (to INR)</label>
+                        <input type="number" step="0.01" id="new-exchange" class="search-input" value="1">
+                    </div>
+                    <div class="filter-group">
+                        <label>Start Date</label>
+                        <input type="date" id="new-start" class="date-input" required>
+                    </div>
+                    <div class="filter-group">
+                        <label>End Date</label>
+                        <input type="date" id="new-end" class="date-input" required>
+                    </div>
+                </div>
+                <div style="margin-top: 1.5rem; display: flex; justify-content: flex-end; gap: 1rem;">
+                    <button type="button" id="btn-cancel" class="tab-btn">Cancel</button>
+                    <button type="submit" class="tab-btn active">Save Item</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <script src="app.js"></script>
 </body>
 </html>

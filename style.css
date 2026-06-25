@@ -374,8 +374,58 @@ tbody tr:hover {
     background: rgba(255, 255, 255, 0.05);
 }
 
+/* Modal Styles */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(5px);
+    z-index: 1000;
+    display: none;
+    justify-content: center;
+    align-items: center;
+}
+
+.modal-overlay.active {
+    display: flex;
+}
+
+.modal-content {
+    width: 100%;
+    max-width: 800px;
+    max-height: 90vh;
+    overflow-y: auto;
+    position: relative;
+}
+
+.form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+    margin-top: 1.5rem;
+}
+
+/* Status Badges */
+.badge {
+    padding: 0.3rem 0.8rem;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    display: inline-block;
+    color: white;
+}
+
+.badge-grey { background: rgba(139, 148, 158, 0.3); border: 1px solid #8b949e; color: #c9d1d9; }
+.badge-green { background: rgba(46, 160, 67, 0.3); border: 1px solid #2ea043; color: #3fb950; }
+.badge-red { background: rgba(248, 81, 73, 0.3); border: 1px solid #f85149; color: #ff7b72; }
+.badge-blue { background: rgba(88, 166, 255, 0.3); border: 1px solid #58a6ff; color: #79c0ff; }
+
 @media (max-width: 768px) {
-    .charts-grid {
+    .charts-grid, .form-grid {
         grid-template-columns: 1fr;
     }
     body {
