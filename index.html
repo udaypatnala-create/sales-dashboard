@@ -154,12 +154,12 @@
                 <div class="table-container">
                     <table id="table-india">
                         <thead>
-                            <tr><th>Date</th><th>Client Name</th><th>Campaign</th><th>Ops</th><th>Sales</th><th>Status</th><th>RO Date</th><th>RO#</th><th>Series</th><th>Order ID</th><th>Inv Date</th><th>Inv#</th><th>Comment</th><th>Platform</th><th>Country</th><th>RO Amt</th><th>Revenue (₹)</th></tr>
+                            <tr><th>Date</th><th>Client Name</th><th>Campaign</th><th>Ops</th><th>Sales</th><th>Status</th><th>RO Date</th><th>RO#</th><th>Series</th><th>Order ID</th><th>Inv Date</th><th>Inv#</th><th>Comment</th><th>Platform</th><th>Country</th><th>RO Amt</th><th>Revenue (₹)</th><th>Actions</th></tr>
                         </thead>
                         <tbody></tbody>
                         <tfoot>
                             <tr style="font-weight: bold; font-size: 1.1em; background: rgba(88, 166, 255, 0.15);">
-                                <td colspan="16" style="text-align: right;">Total Amount:</td>
+                                <td colspan="17" style="text-align: right;">Total Amount:</td>
                                 <td id="india-table-footer-total">₹0</td>
                             </tr>
                         </tfoot>
@@ -172,12 +172,12 @@
                 <div class="table-container">
                     <table id="table-export">
                         <thead>
-                            <tr><th>Date</th><th>Client Name</th><th>Campaign</th><th>Ops</th><th>Sales</th><th>Status</th><th>RO Date</th><th>RO#</th><th>Series</th><th>Order ID</th><th>Inv Date</th><th>Inv#</th><th>Comment</th><th>Platform</th><th>Country</th><th>RO Amt</th><th>Revenue (₹)</th></tr>
+                            <tr><th>Date</th><th>Client Name</th><th>Campaign</th><th>Ops</th><th>Sales</th><th>Status</th><th>RO Date</th><th>RO#</th><th>Series</th><th>Order ID</th><th>Inv Date</th><th>Inv#</th><th>Comment</th><th>Platform</th><th>Country</th><th>RO Amt</th><th>Revenue (₹)</th><th>Actions</th></tr>
                         </thead>
                         <tbody></tbody>
                         <tfoot>
                             <tr style="font-weight: bold; font-size: 1.1em; background: rgba(88, 166, 255, 0.15);">
-                                <td colspan="16" style="text-align: right;">Total Amount:</td>
+                                <td colspan="17" style="text-align: right;">Total Amount:</td>
                                 <td id="export-table-footer-total">₹0</td>
                             </tr>
                         </tfoot>
@@ -190,12 +190,12 @@
                 <div class="table-container">
                     <table id="table-pg">
                         <thead>
-                            <tr><th>Date</th><th>Client Name</th><th>Campaign</th><th>Ops</th><th>Sales</th><th>Status</th><th>RO Date</th><th>RO#</th><th>Series</th><th>Order ID</th><th>Inv Date</th><th>Inv#</th><th>Comment</th><th>Platform</th><th>Country</th><th>RO Amt</th><th>Revenue (₹)</th></tr>
+                            <tr><th>Date</th><th>Client Name</th><th>Campaign</th><th>Ops</th><th>Sales</th><th>Status</th><th>RO Date</th><th>RO#</th><th>Series</th><th>Order ID</th><th>Inv Date</th><th>Inv#</th><th>Comment</th><th>Platform</th><th>Country</th><th>RO Amt</th><th>Revenue (₹)</th><th>Actions</th></tr>
                         </thead>
                         <tbody></tbody>
                         <tfoot>
                             <tr style="font-weight: bold; font-size: 1.1em; background: rgba(88, 166, 255, 0.15);">
-                                <td colspan="16" style="text-align: right;">Total Amount:</td>
+                                <td colspan="17" style="text-align: right;">Total Amount:</td>
                                 <td id="pg-table-footer-total">₹0</td>
                             </tr>
                         </tfoot>
@@ -209,8 +209,9 @@
     <!-- Add New Item Modal -->
     <div id="add-modal" class="modal-overlay">
         <div class="modal-content glass-panel">
-            <h2>Add New Billing Item</h2>
+            <h2>Add / Edit Item</h2>
             <form id="add-form">
+                <input type="hidden" id="edit-id" value="">
                 <div class="form-grid">
                     <div class="filter-group">
                         <label>Region/Sheet</label>
@@ -281,8 +282,44 @@
                         <label>End Date</label>
                         <input type="date" id="new-end" class="date-input" required>
                     </div>
+                    <div class="filter-group">
+                        <label>RO Date</label>
+                        <input type="date" id="new-ro-date" class="date-input">
+                    </div>
+                    <div class="filter-group">
+                        <label>RO Number</label>
+                        <input type="text" id="new-ro-number" class="search-input">
+                    </div>
+                    <div class="filter-group">
+                        <label>Series</label>
+                        <input type="text" id="new-series" class="search-input">
+                    </div>
+                    <div class="filter-group">
+                        <label>Order ID</label>
+                        <input type="text" id="new-order-id" class="search-input">
+                    </div>
+                    <div class="filter-group">
+                        <label>Invoice Date</label>
+                        <input type="date" id="new-inv-date" class="date-input">
+                    </div>
+                    <div class="filter-group">
+                        <label>Invoice Number</label>
+                        <input type="text" id="new-inv-number" class="search-input">
+                    </div>
+                    <div class="filter-group">
+                        <label>Comment</label>
+                        <input type="text" id="new-comment" class="search-input">
+                    </div>
+                    <div class="filter-group">
+                        <label>Platform</label>
+                        <input type="text" id="new-platform" class="search-input">
+                    </div>
+                    <div class="filter-group">
+                        <label>Country</label>
+                        <input type="text" id="new-country" class="search-input">
+                    </div>
                 </div>
-                <div style="margin-top: 1.5rem; display: flex; justify-content: flex-end; gap: 1rem;">
+                <div style="margin-top: 1.5rem; display: flex; gap: 1rem; justify-content: flex-end;">
                     <button type="button" id="btn-cancel" class="tab-btn">Cancel</button>
                     <button type="submit" class="tab-btn active">Save Item</button>
                 </div>

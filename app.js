@@ -11,8 +11,25 @@ async function init() {
         const response = await fetch('data.json');
         globalData = await response.json();
         
+        // Assign IDs to base data
+        globalData.forEach((d, i) => {
+            if(!d._id) {
+                const str = `${d.region}-${d.client_name}-${d.campaign}-${d.amount}-${i}`;
+                d._id = 'base-' + btoa(unescape(encodeURIComponent(str))).substring(0, 20);
+            }
+        });
+
+        // Apply edits from local storage
+        const edits = JSON.parse(localStorage.getItem('editedBillingItems') || '{}');
+        globalData = globalData.map(d => edits[d._id] ? { ...d, ...edits[d._id] } : d);
+        
         // Load custom items from local storage
         const localItems = JSON.parse(localStorage.getItem('customBillingItems') || '[]');
+        localItems.forEach((d, i) => {
+            if(!d._id) d._id = 'custom-' + Date.now() + '-' + i;
+            if(edits[d._id]) Object.assign(d, edits[d._id]);
+        });
+        
         globalData = [...globalData, ...localItems];
         
         filteredData = [...globalData];
@@ -85,6 +102,9 @@ function addEventListeners() {
 
     // Modal Events
     document.getElementById('btn-add-item').addEventListener('click', () => {
+        document.getElementById('add-form').reset();
+        document.getElementById('edit-id').value = "";
+        document.getElementById('new-billing-type').closest('.filter-group').style.display = 'block';
         document.getElementById('add-modal').classList.add('active');
     });
 
@@ -95,8 +115,49 @@ function addEventListeners() {
     document.getElementById('add-form').addEventListener('submit', handleAddFormSubmit);
 }
 
+function handleEditClick(e) {
+    const btn = e.target;
+    const id = btn.getAttribute('data-id');
+    const item = globalData.find(d => d._id === id);
+    if(!item) return;
+
+    document.getElementById('edit-id').value = id;
+    
+    // Populate form
+    document.getElementById('new-region').value = item.region || 'India';
+    document.getElementById('new-client').value = item.client_name || '';
+    document.getElementById('new-campaign').value = item.campaign || '';
+    document.getElementById('new-ops').value = item.ops_name || '';
+    document.getElementById('new-sales').value = item.sales_contact || '';
+    document.getElementById('new-status').value = item.status || 'Yet to start';
+    
+    // Hide billing type for edits
+    document.getElementById('new-billing-type').closest('.filter-group').style.display = 'none';
+    
+    document.getElementById('new-ro').value = item.ro_amount || 0;
+    document.getElementById('new-currency').value = item.currency || 'INR';
+    document.getElementById('new-exchange').value = item.exchange_rate || 1;
+    document.getElementById('new-start').value = item.start_dt || '';
+    document.getElementById('new-end').value = item.end_dt || '';
+    
+    // New fields
+    if(document.getElementById('new-ro-date')) document.getElementById('new-ro-date').value = item.ro_date || '';
+    if(document.getElementById('new-ro-number')) document.getElementById('new-ro-number').value = item.ro_number || '';
+    if(document.getElementById('new-series')) document.getElementById('new-series').value = item.series || '';
+    if(document.getElementById('new-order-id')) document.getElementById('new-order-id').value = item.order_id || '';
+    if(document.getElementById('new-inv-date')) document.getElementById('new-inv-date').value = item.inv_date || '';
+    if(document.getElementById('new-inv-number')) document.getElementById('new-inv-number').value = item.inv_number || '';
+    if(document.getElementById('new-comment')) document.getElementById('new-comment').value = item.comment || '';
+    if(document.getElementById('new-platform')) document.getElementById('new-platform').value = item.platform || '';
+    if(document.getElementById('new-country')) document.getElementById('new-country').value = item.country || '';
+
+    document.getElementById('add-modal').classList.add('active');
+}
+
 function handleAddFormSubmit(e) {
     e.preventDefault();
+    const editId = document.getElementById('edit-id').value;
+    
     const region = document.getElementById('new-region').value;
     const client = document.getElementById('new-client').value;
     const campaign = document.getElementById('new-campaign').value;
@@ -110,52 +171,103 @@ function handleAddFormSubmit(e) {
     const startDt = document.getElementById('new-start').value;
     const endDt = document.getElementById('new-end').value;
 
+    const roDate = document.getElementById('new-ro-date') ? document.getElementById('new-ro-date').value : '';
+    const roNum = document.getElementById('new-ro-number') ? document.getElementById('new-ro-number').value : '';
+    const series = document.getElementById('new-series') ? document.getElementById('new-series').value : '';
+    const orderId = document.getElementById('new-order-id') ? document.getElementById('new-order-id').value : '';
+    const invDate = document.getElementById('new-inv-date') ? document.getElementById('new-inv-date').value : '';
+    const invNum = document.getElementById('new-inv-number') ? document.getElementById('new-inv-number').value : '';
+    const comment = document.getElementById('new-comment') ? document.getElementById('new-comment').value : '';
+    const platform = document.getElementById('new-platform') ? document.getElementById('new-platform').value : '';
+    const country = document.getElementById('new-country') ? document.getElementById('new-country').value : '';
+
     const roInr = rawRo * exchange;
 
-    let newItems = [];
-    
-    if (billType === 'Monthly' && startDt && endDt) {
-        const sDate = new Date(startDt);
-        const eDate = new Date(endDt);
-        
-        let months = (eDate.getFullYear() - sDate.getFullYear()) * 12;
-        months -= sDate.getMonth();
-        months += eDate.getMonth();
-        months = months <= 0 ? 1 : months + 1; // inclusive of start and end month
-
-        const monthlyRo = roInr / months;
-
-        for (let i = 0; i < months; i++) {
-            let splitDate = new Date(sDate.getFullYear(), sDate.getMonth() + i, 1);
-            let dateStr = splitDate.toISOString().split('T')[0];
+    if (editId) {
+        // Edit Mode
+        const item = globalData.find(d => d._id === editId);
+        if(item) {
+            item.region = region;
+            item.client_name = client;
+            item.campaign = campaign;
+            item.ops_name = ops;
+            item.sales_contact = sales;
+            item.status = status;
+            item.ro_amount = roInr;
+            // Since we're editing a single row, let's allow them to update the amount (but amount isn't editable here, wait... billing amount = roInr in this form)
+            // Let's assume editing updates the amount to roInr. But wait, if it was split, the amount is monthlyRo.
+            // Actually, let's keep item.amount unchanged UNLESS they edit ro_amount and it's not a split?
+            // To be safe, if we are editing, let's just let amount = roInr because we don't have an "amount" field in the form.
+            // The safest is: if they are editing a split item, modifying RO modifies the amount. Let's just set amount = roInr.
+            item.amount = roInr; 
+            item.currency = currency;
+            item.exchange_rate = exchange;
+            item.start_dt = startDt;
+            item.end_dt = endDt;
             
-            newItems.push({
-                region, date: dateStr, client_name: client, campaign, ops_name: ops,
-                status, ro_amount: roInr, amount: monthlyRo, start_dt: startDt, end_dt: endDt,
-                sales_contact: sales, platform: "", currency, exchange_rate: exchange
-            });
+            item.ro_date = roDate;
+            item.ro_number = roNum;
+            item.series = series;
+            item.order_id = orderId;
+            item.inv_date = invDate;
+            item.inv_number = invNum;
+            item.comment = comment;
+            item.platform = platform;
+            item.country = country;
+            
+            // Save to local storage
+            let edits = JSON.parse(localStorage.getItem('editedBillingItems') || '{}');
+            edits[editId] = { ...item };
+            localStorage.setItem('editedBillingItems', JSON.stringify(edits));
         }
     } else {
-        // End of campaign or no valid dates
-        newItems.push({
-            region, date: endDt || startDt, client_name: client, campaign, ops_name: ops,
-            status, ro_amount: roInr, amount: roInr, start_dt: startDt, end_dt: endDt,
-            sales_contact: sales, platform: "", currency, exchange_rate: exchange
-        });
+        // Create Mode
+        let newItems = [];
+        if (billType === 'Monthly' && startDt && endDt) {
+            const sDate = new Date(startDt);
+            const eDate = new Date(endDt);
+            
+            let months = (eDate.getFullYear() - sDate.getFullYear()) * 12;
+            months -= sDate.getMonth();
+            months += eDate.getMonth();
+            months = months <= 0 ? 1 : months + 1;
+
+            const monthlyRo = roInr / months;
+
+            for (let i = 0; i < months; i++) {
+                let splitDate = new Date(sDate.getFullYear(), sDate.getMonth() + i, 1);
+                let dateStr = splitDate.toISOString().split('T')[0];
+                
+                newItems.push({
+                    _id: 'custom-' + Date.now() + '-' + i,
+                    region, date: dateStr, client_name: client, campaign, ops_name: ops,
+                    status, ro_amount: roInr, amount: monthlyRo, start_dt: startDt, end_dt: endDt,
+                    sales_contact: sales, platform, currency, exchange_rate: exchange,
+                    ro_date: roDate, ro_number: roNum, series, order_id: orderId, inv_date: invDate, inv_number: invNum, comment, country
+                });
+            }
+        } else {
+            newItems.push({
+                _id: 'custom-' + Date.now(),
+                region, date: endDt || startDt, client_name: client, campaign, ops_name: ops,
+                status, ro_amount: roInr, amount: roInr, start_dt: startDt, end_dt: endDt,
+                sales_contact: sales, platform, currency, exchange_rate: exchange,
+                ro_date: roDate, ro_number: roNum, series, order_id: orderId, inv_date: invDate, inv_number: invNum, comment, country
+            });
+        }
+
+        const localItems = JSON.parse(localStorage.getItem('customBillingItems') || '[]');
+        localItems.push(...newItems);
+        localStorage.setItem('customBillingItems', JSON.stringify(localItems));
+        globalData.push(...newItems);
     }
-
-    const localItems = JSON.parse(localStorage.getItem('customBillingItems') || '[]');
-    localItems.push(...newItems);
-    localStorage.setItem('customBillingItems', JSON.stringify(localItems));
-
-    globalData.push(...newItems);
     
-    // reset form and close
     document.getElementById('add-form').reset();
     document.getElementById('add-modal').classList.remove('active');
     
     populateFilters();
     applyFilters();
+    renderDashboard();
 }
 
 function applyFilters() {
@@ -310,6 +422,7 @@ function renderTables() {
             <td>${d.country || '-'}</td>
             <td>₹${(d.ro_amount || 0).toLocaleString('en-IN', {maximumFractionDigits: 2})}</td>
             <td>₹${(d.amount || 0).toLocaleString('en-IN', {maximumFractionDigits: 2})}</td>
+            <td><button class="edit-btn" data-id="${d._id}" style="padding: 4px 8px; font-size: 0.9em; background: rgba(88, 166, 255, 0.2); border: none; border-radius: 4px; color: #58a6ff; cursor: pointer;">✎ Edit</button></td>
         </tr>`;
         
         if (d.region === "India") {
@@ -327,6 +440,11 @@ function renderTables() {
     if(tableIndia) tableIndia.innerHTML = indHtml.join('');
     if(tableExport) tableExport.innerHTML = expHtml.join('');
     if(tablePg) tablePg.innerHTML = pgHtml.join('');
+
+    // Attach edit listeners
+    document.querySelectorAll('.edit-btn').forEach(btn => {
+        btn.addEventListener('click', handleEditClick);
+    });
 
     const fInd = `₹${(indTotal / 100000).toLocaleString('en-IN', {maximumFractionDigits: 2})} L`;
     const fExp = `₹${(expTotal / 100000).toLocaleString('en-IN', {maximumFractionDigits: 2})} L`;
