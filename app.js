@@ -833,7 +833,9 @@ function applyTheme(isLight) {
         Chart.defaults.color = '#8b949e';
         Chart.defaults.borderColor = 'rgba(255,255,255,0.05)';
     }
-    renderCharts();
+    if (typeof renderDashboard === 'function' && globalData && globalData.length > 0) {
+        renderDashboard();
+    }
 }
 
 if (themeBtn) {
