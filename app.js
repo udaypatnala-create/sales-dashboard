@@ -196,36 +196,121 @@ function handlePdfGenerateClick(e) {
     btn.innerHTML = '⏳...';
     btn.disabled = true;
 
-    const amtStr = 'Rs. ' + (rowData.amount || 0).toLocaleString('en-IN', {maximumFractionDigits: 2});
-    const dateStr = new Date().toLocaleDateString();
+    const isExport = rowData.region !== 'India';
+    const invoiceTitle = isExport ? 'EXPORT INVOICE' : 'TAX INVOICE';
+    
+    // Formatting values
+    const currencySym = rowData.currency === 'USD' ? '$' : (rowData.currency === 'INR' ? '₹' : (rowData.currency || ''));
+    const amtStr = (rowData.amount || 0).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+    
+    let dStr = rowData.inv_date;
+    if (dStr) {
+        const d = new Date(dStr);
+        if (!isNaN(d)) dStr = d.toLocaleDateString('en-GB', {day: '2-digit', month: 'short', year: '2-digit'}).replace(/ /g, '-');
+    } else {
+        dStr = new Date().toLocaleDateString('en-GB', {day: '2-digit', month: 'short', year: '2-digit'}).replace(/ /g, '-');
+    }
+    
+    // Get month year for description
+    let monthYear = "the period";
+    if (rowData.start_dt) {
+        const sd = new Date(rowData.start_dt);
+        if (!isNaN(sd)) monthYear = sd.toLocaleDateString('en-US', {month: 'long', year: 'numeric'});
+    }
 
     const htmlContent = `
-        <div style="width: 8.5in; height: 11in; padding: 2in 1in 1in 1in; box-sizing: border-box; background-image: url('data:image/png;base64,${letterheadBase64}'); background-size: 100% 100%; background-repeat: no-repeat; background-position: center; font-family: 'Outfit', sans-serif;">
-            <h1 style="text-align: center; margin-bottom: 30px; color: #333; font-size: 24pt;">INVOICE</h1>
-            <p style="font-size: 12pt;"><strong>Date:</strong> ${dateStr}</p>
-            <div style="margin-top: 30px; margin-bottom: 30px; font-size: 12pt;">
-                <p><strong>Billed To:</strong></p>
-                <p style="font-size: 1.2em; font-weight: bold;">${rowData.client_name || "N/A"}</p>
-            </div>
-            <table style="width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 12pt;">
-                <thead>
-                    <tr style="background-color: #f2f2f2;">
-                        <th style="border: 1px solid #ccc; padding: 10px; text-align: left;">Description</th>
-                        <th style="border: 1px solid #ccc; padding: 10px; text-align: right;">Amount</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td style="border: 1px solid #ccc; padding: 10px;">
-                            <strong>Campaign:</strong> ${rowData.campaign || "N/A"}<br>
-                            <strong>Brand:</strong> ${rowData.brand_name || "N/A"}
-                        </td>
-                        <td style="border: 1px solid #ccc; padding: 10px; text-align: right;">${amtStr}</td>
-                    </tr>
-                </tbody>
+        <div style="width: 8.27in; height: 11.69in; padding: 1.5in 0.5in 1.5in 0.5in; box-sizing: border-box; background-image: url('data:image/png;base64,${letterheadBase64}'); background-size: 100% 100%; background-repeat: no-repeat; background-position: center; font-family: Arial, sans-serif; font-size: 10pt; color: #000; position: relative;">
+            
+            <div style="background-color: #000080; color: white; text-align: center; font-weight: bold; padding: 4px; border: 1px solid #000; font-size: 11pt;">${invoiceTitle}</div>
+            
+            <table style="width: 100%; border-collapse: collapse; border: 1px solid #000; border-top: none;">
+                <tr>
+                    <td style="width: 60%; vertical-align: top; padding: 6px; border-right: 1px solid #000; line-height: 1.4;">
+                        <strong>To</strong><br>
+                        <strong>${rowData.client_name || "Client Name"}</strong><br>
+                        <br><br><br>
+                        GSTIN No :<br>
+                        State &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Code :
+                    </td>
+                    <td style="width: 40%; vertical-align: top; padding: 0;">
+                        <table style="width: 100%; border-collapse: collapse; height: 100%;">
+                            <tr>
+                                <td style="padding: 6px; border-bottom: 1px solid #000; border-right: 1px solid #000; width: 40%;">Invoice No</td>
+                                <td style="padding: 6px; border-bottom: 1px solid #000;">${rowData.inv_number || "Draft"}</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 6px; border-bottom: 1px solid #000; border-right: 1px solid #000;">Date</td>
+                                <td style="padding: 6px; border-bottom: 1px solid #000;">${dStr}</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 6px; border-right: 1px solid #000;">Terms</td>
+                                <td style="padding: 6px;"></td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
             </table>
-            <div style="text-align: right; margin-top: 30px; font-size: 14pt;">
-                <strong>Total: ${amtStr}</strong>
+
+            <table style="width: 100%; border-collapse: collapse; border: 1px solid #000; border-top: none; margin-top: -1px;">
+                <tr style="color: blue; font-weight: bold; background-color: #e6e6ff;">
+                    <th style="border: 1px solid #000; padding: 6px; width: 5%; text-align: left; color: blue;">#</th>
+                    <th style="border: 1px solid #000; padding: 6px; width: 75%; text-align: center; color: blue;">Description</th>
+                    <th style="border: 1px solid #000; padding: 6px; width: 20%; text-align: right; color: blue;">Amount</th>
+                </tr>
+                <tr>
+                    <td style="border-right: 1px solid #000; padding: 6px; vertical-align: top; height: 180px;">1</td>
+                    <td style="border-right: 1px solid #000; padding: 6px; vertical-align: top; line-height: 1.5;">
+                        Online Advertisement Fee- ${isExport ? 'Export' : 'Domestic'}<br>
+                        &nbsp;&nbsp;${rowData.brand_name || rowData.campaign || ""} campaign on Cricbuzz during ${monthYear}<br><br>
+                        &nbsp;&nbsp;<strong>RO No : ${rowData.ro_number || ""}</strong>
+                    </td>
+                    <td style="padding: 6px; vertical-align: top; text-align: right;">
+                        ${currencySym}${amtStr}
+                    </td>
+                </tr>
+                <tr style="border-top: 1px solid #000;">
+                    <td colspan="2" style="border-right: 1px solid #000; padding: 6px; text-align: right; font-weight: bold;">Total</td>
+                    <td style="padding: 6px; text-align: right; font-weight: bold;">${currencySym}${amtStr}</td>
+                </tr>
+            </table>
+
+            <div style="border: 1px solid #000; border-top: none; padding: 6px; margin-bottom: 20px;">
+                IRN : 17e253676f9c60157a72e8e2d0a59b104f994703ace4777f2c9b12dbb4bf91ef
+            </div>
+
+            <div style="display: flex; margin-top: 10px; font-size: 10pt; line-height: 1.4;">
+                <div style="flex: 1;">
+                    <strong style="text-decoration: underline;">Payment Instructions :</strong><br><br>
+                    <table style="border: none; padding: 0; width: 100%; font-size: 10pt;">
+                        <tr><td style="width: 140px; padding: 1px;">Payable to</td><td style="padding: 1px;">: Cricbuzz Global Enterprises Limited</td></tr>
+                        <tr><td style="padding: 1px;">GSTIN</td><td style="padding: 1px;">: 27AALCC6425H1ZI</td></tr>
+                        <tr><td style="padding: 1px;">Place</td><td style="padding: 1px;">: Mumbai</td></tr>
+                        <tr><td style="padding: 1px;">HSN Code</td><td style="padding: 1px;">: 998365</td></tr>
+                        <tr><td style="padding: 1px;">HSN Description</td><td style="padding: 1px;">: Sale of Internet Advertising Space</td></tr>
+                        <tr><td style="padding: 1px;">Reverse Charge</td><td style="padding: 1px;">: Not applicable</td></tr>
+                    </table>
+                </div>
+                <div style="width: 150px; text-align: right;">
+                    <img src="https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=17e253676f9c60157a72e8e2d0a59b104f994703ace4777f2c9b12dbb4bf91ef" style="width: 120px; height: 120px; border: 1px solid #ccc; display: inline-block;">
+                </div>
+            </div>
+
+            <div style="margin-top: 20px; font-size: 10pt; line-height: 1.4;">
+                <strong style="text-decoration: underline;">NEFT/RTGS Details :</strong><br><br>
+                <table style="border: none; padding: 0; width: 100%; font-size: 10pt;">
+                    <tr><td style="width: 140px; padding: 1px;">Account Number</td><td style="padding: 1px;">: 50200090046749</td></tr>
+                    <tr><td style="padding: 1px;">Bank Name</td><td style="padding: 1px;">: HDFC Bank Ltd</td></tr>
+                    <tr><td style="padding: 1px;">Bank Address</td><td style="padding: 1px;">: Vipul Plaza Suncity Golf Course Road Sector 54 Gurgaon Haryana 122002</td></tr>
+                    <tr><td style="padding: 1px;">IFSC Code</td><td style="padding: 1px;">: HDFC0009273</td></tr>
+                    <tr><td style="padding: 1px;">SWIFT Code</td><td style="padding: 1px;">: HDFCINBB</td></tr>
+                </table>
+            </div>
+
+            <div style="margin-top: 20px; font-size: 10pt; line-height: 1.4;">
+                <strong style="text-decoration: underline;">Mailing Address :</strong><br><br>
+                Business Arcade, 11th Floor, Plot No. 584, Sayani Road, Opposite Parel Bus Depot, Lower Parel, Mumbai – 400 013,<br>
+                GSTIN/UIN: 27AALCC6425H1ZI, State Name : Maharashtra, Code : 27<br>
+                Phone :
             </div>
         </div>
     `;
@@ -234,8 +319,8 @@ function handlePdfGenerateClick(e) {
         margin:       0,
         filename:     'Invoice_' + (rowData.client_name || 'Client').replace(/[^a-z0-9]/gi, '_') + '.pdf',
         image:        { type: 'jpeg', quality: 0.98 },
-        html2canvas:  { scale: 2 },
-        jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
+        html2canvas:  { scale: 2, useCORS: true },
+        jsPDF:        { unit: 'in', format: 'a4', orientation: 'portrait' }
     };
 
     html2pdf().set(opt).from(htmlContent).save().then(() => {
