@@ -818,18 +818,21 @@ function updateRegionChart() {
 const themeBtn = document.getElementById('toggle-theme');
 const themeIcon = document.getElementById('theme-icon');
 const themeText = document.getElementById('theme-text');
+const themeCheckbox = document.getElementById('theme-checkbox');
 
 function applyTheme(isLight) {
     if (isLight) {
         document.body.classList.add('light-mode');
         if (themeIcon) themeIcon.textContent = '🌙';
         if (themeText) themeText.textContent = 'Dark Mode';
+        if (themeCheckbox) themeCheckbox.checked = true;
         Chart.defaults.color = '#57606a';
         Chart.defaults.borderColor = 'rgba(0,0,0,0.05)';
     } else {
         document.body.classList.remove('light-mode');
         if (themeIcon) themeIcon.textContent = '☀️';
         if (themeText) themeText.textContent = 'Light Mode';
+        if (themeCheckbox) themeCheckbox.checked = false;
         Chart.defaults.color = '#8b949e';
         Chart.defaults.borderColor = 'rgba(255,255,255,0.05)';
     }
