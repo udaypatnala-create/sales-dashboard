@@ -219,15 +219,17 @@ function handlePdfGenerateClick(e) {
     }
 
     const htmlContent = `
-        <div style="width: 8.27in; height: 11.69in; padding: 1.5in 0.5in 1.5in 0.5in; box-sizing: border-box; background-image: url('data:image/png;base64,${letterheadBase64}'); background-size: 100% 100%; background-repeat: no-repeat; background-position: center; font-family: Arial, sans-serif; font-size: 10pt; color: #000; position: relative;">
+        <div style="width: 8.27in; height: 11.69in; padding: 1.5in 0.5in 1.5in 0.5in; box-sizing: border-box; font-family: Arial, sans-serif; font-size: 10pt; color: #000; position: relative; background-color: #fff;">
             
-            <div style="background-color: #000080; color: white; text-align: center; font-weight: bold; padding: 4px; border: 1px solid #000; font-size: 11pt;">${invoiceTitle}</div>
+            <img src="data:image/png;base64,\${letterheadBase64}" style="position: absolute; top: 0.4in; right: 0.5in; height: 35px; width: auto;">
+
+            <div style="background-color: #000080; color: white; text-align: center; font-weight: bold; padding: 4px; border: 1px solid #000; font-size: 11pt;">\${invoiceTitle}</div>
             
             <table style="width: 100%; border-collapse: collapse; border: 1px solid #000; border-top: none;">
                 <tr>
                     <td style="width: 60%; vertical-align: top; padding: 6px; border-right: 1px solid #000; line-height: 1.4;">
                         <strong>To</strong><br>
-                        <strong>${rowData.client_name || "Client Name"}</strong><br>
+                        <strong>\${rowData.client_name || "Client Name"}</strong><br>
                         <br><br><br>
                         GSTIN No :<br>
                         State &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Code :
@@ -236,11 +238,11 @@ function handlePdfGenerateClick(e) {
                         <table style="width: 100%; border-collapse: collapse; height: 100%;">
                             <tr>
                                 <td style="padding: 6px; border-bottom: 1px solid #000; border-right: 1px solid #000; width: 40%;">Invoice No</td>
-                                <td style="padding: 6px; border-bottom: 1px solid #000;">${rowData.inv_number || "Draft"}</td>
+                                <td style="padding: 6px; border-bottom: 1px solid #000;">\${rowData.inv_number || "Draft"}</td>
                             </tr>
                             <tr>
                                 <td style="padding: 6px; border-bottom: 1px solid #000; border-right: 1px solid #000;">Date</td>
-                                <td style="padding: 6px; border-bottom: 1px solid #000;">${dStr}</td>
+                                <td style="padding: 6px; border-bottom: 1px solid #000;">\${dStr}</td>
                             </tr>
                             <tr>
                                 <td style="padding: 6px; border-right: 1px solid #000;">Terms</td>
@@ -260,17 +262,17 @@ function handlePdfGenerateClick(e) {
                 <tr>
                     <td style="border-right: 1px solid #000; padding: 6px; vertical-align: top; height: 180px;">1</td>
                     <td style="border-right: 1px solid #000; padding: 6px; vertical-align: top; line-height: 1.5;">
-                        Online Advertisement Fee- ${isExport ? 'Export' : 'Domestic'}<br>
-                        &nbsp;&nbsp;${rowData.brand_name || rowData.campaign || ""} campaign on Cricbuzz during ${monthYear}<br><br>
-                        &nbsp;&nbsp;<strong>RO No : ${rowData.ro_number || ""}</strong>
+                        Online Advertisement Fee- \${isExport ? 'Export' : 'Domestic'}<br>
+                        &nbsp;&nbsp;\${rowData.brand_name || rowData.campaign || ""} campaign on Cricbuzz during \${monthYear}<br><br>
+                        &nbsp;&nbsp;<strong>RO No : \${rowData.ro_number || ""}</strong>
                     </td>
                     <td style="padding: 6px; vertical-align: top; text-align: right;">
-                        ${currencySym}${amtStr}
+                        \${currencySym}\${amtStr}
                     </td>
                 </tr>
                 <tr style="border-top: 1px solid #000;">
                     <td colspan="2" style="border-right: 1px solid #000; padding: 6px; text-align: right; font-weight: bold;">Total</td>
-                    <td style="padding: 6px; text-align: right; font-weight: bold;">${currencySym}${amtStr}</td>
+                    <td style="padding: 6px; text-align: right; font-weight: bold;">\${currencySym}\${amtStr}</td>
                 </tr>
             </table>
 
@@ -311,6 +313,15 @@ function handlePdfGenerateClick(e) {
                 Business Arcade, 11th Floor, Plot No. 584, Sayani Road, Opposite Parel Bus Depot, Lower Parel, Mumbai – 400 013,<br>
                 GSTIN/UIN: 27AALCC6425H1ZI, State Name : Maharashtra, Code : 27<br>
                 Phone :
+            </div>
+
+            <div style="position: absolute; bottom: 0.4in; left: 0.5in; right: 0.5in; text-align: center; font-size: 8pt; color: #888; line-height: 1.3;">
+                <strong style="color: #666; font-size: 9pt;">Cricbuzz Global Enterprises Limited</strong><br>
+                Regd. Office: Express Building, 9-10, Bahadurshah Zafar Marg, I.P. Estate, New Delhi, Central Delhi - 110002, INDIA<br>
+                Corp. Office: 11th Floor, Plot No 584, Business Arcade, Sayani Road Opposite Parel Bus Depot, Lower Parel, Mumbai City, Maharashtra - 400013 |<br>
+                CIN: U63999DL2024PLC426666; PAN: AALCC6425H; GSTIN: 27AALCC6425H1ZI<br>
+                Telephone: +91 8082529699, +91 80951 16575; Fax: +91 (0)80 2679 0623<br>
+                Email: admin@cricbuzz.com; Website: www.cricbuzz.com
             </div>
         </div>
     `;
