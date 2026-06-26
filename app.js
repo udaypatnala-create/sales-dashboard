@@ -196,54 +196,39 @@ function handlePdfGenerateClick(e) {
     btn.innerHTML = '⏳...';
     btn.disabled = true;
 
-    const invoiceDiv = document.createElement('div');
-    invoiceDiv.style.position = 'absolute';
-    invoiceDiv.style.top = '0';
-    invoiceDiv.style.left = '0';
-    invoiceDiv.style.zIndex = '-9999';
-    invoiceDiv.style.width = '8.5in';
-    invoiceDiv.style.height = '11in';
-    invoiceDiv.style.padding = '2in 1in 1in 1in';
-    invoiceDiv.style.boxSizing = 'border-box';
-    invoiceDiv.style.backgroundImage = 'url("data:image/png;base64,' + letterheadBase64 + '")';
-    invoiceDiv.style.backgroundSize = '100% 100%';
-    invoiceDiv.style.backgroundRepeat = 'no-repeat';
-    invoiceDiv.style.backgroundPosition = 'center';
-    invoiceDiv.style.fontFamily = "'Outfit', sans-serif";
-    
     const amtStr = 'Rs. ' + (rowData.amount || 0).toLocaleString('en-IN', {maximumFractionDigits: 2});
     const dateStr = new Date().toLocaleDateString();
 
-    invoiceDiv.innerHTML = `
-        <h1 style="text-align: center; margin-bottom: 30px; color: #333; font-size: 24pt;">INVOICE</h1>
-        <p style="font-size: 12pt;"><strong>Date:</strong> ${dateStr}</p>
-        <div style="margin-top: 30px; margin-bottom: 30px; font-size: 12pt;">
-            <p><strong>Billed To:</strong></p>
-            <p style="font-size: 1.2em; font-weight: bold;">${rowData.client_name || "N/A"}</p>
-        </div>
-        <table style="width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 12pt;">
-            <thead>
-                <tr style="background-color: #f2f2f2;">
-                    <th style="border: 1px solid #ccc; padding: 10px; text-align: left;">Description</th>
-                    <th style="border: 1px solid #ccc; padding: 10px; text-align: right;">Amount</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td style="border: 1px solid #ccc; padding: 10px;">
-                        <strong>Campaign:</strong> ${rowData.campaign || "N/A"}<br>
-                        <strong>Brand:</strong> ${rowData.brand_name || "N/A"}
-                    </td>
-                    <td style="border: 1px solid #ccc; padding: 10px; text-align: right;">${amtStr}</td>
-                </tr>
-            </tbody>
-        </table>
-        <div style="text-align: right; margin-top: 30px; font-size: 14pt;">
-            <strong>Total: ${amtStr}</strong>
+    const htmlContent = `
+        <div style="width: 8.5in; height: 11in; padding: 2in 1in 1in 1in; box-sizing: border-box; background-image: url('data:image/png;base64,${letterheadBase64}'); background-size: 100% 100%; background-repeat: no-repeat; background-position: center; font-family: 'Outfit', sans-serif;">
+            <h1 style="text-align: center; margin-bottom: 30px; color: #333; font-size: 24pt;">INVOICE</h1>
+            <p style="font-size: 12pt;"><strong>Date:</strong> ${dateStr}</p>
+            <div style="margin-top: 30px; margin-bottom: 30px; font-size: 12pt;">
+                <p><strong>Billed To:</strong></p>
+                <p style="font-size: 1.2em; font-weight: bold;">${rowData.client_name || "N/A"}</p>
+            </div>
+            <table style="width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 12pt;">
+                <thead>
+                    <tr style="background-color: #f2f2f2;">
+                        <th style="border: 1px solid #ccc; padding: 10px; text-align: left;">Description</th>
+                        <th style="border: 1px solid #ccc; padding: 10px; text-align: right;">Amount</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td style="border: 1px solid #ccc; padding: 10px;">
+                            <strong>Campaign:</strong> ${rowData.campaign || "N/A"}<br>
+                            <strong>Brand:</strong> ${rowData.brand_name || "N/A"}
+                        </td>
+                        <td style="border: 1px solid #ccc; padding: 10px; text-align: right;">${amtStr}</td>
+                    </tr>
+                </tbody>
+            </table>
+            <div style="text-align: right; margin-top: 30px; font-size: 14pt;">
+                <strong>Total: ${amtStr}</strong>
+            </div>
         </div>
     `;
-
-    document.body.appendChild(invoiceDiv);
 
     var opt = {
         margin:       0,
@@ -253,14 +238,12 @@ function handlePdfGenerateClick(e) {
         jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
     };
 
-    html2pdf().set(opt).from(invoiceDiv).save().then(() => {
-        document.body.removeChild(invoiceDiv);
+    html2pdf().set(opt).from(htmlContent).save().then(() => {
         btn.innerHTML = originalText;
         btn.disabled = false;
     }).catch(err => {
         console.error(err);
         alert('Error generating PDF');
-        document.body.removeChild(invoiceDiv);
         btn.innerHTML = originalText;
         btn.disabled = false;
     });
