@@ -293,7 +293,7 @@ function handlePdfGenerateClick(e) {
                     </table>
                 </div>
                 <div style="width: 150px; text-align: right;">
-                    <img src="https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=17e253676f9c60157a72e8e2d0a59b104f994703ace4777f2c9b12dbb4bf91ef" style="width: 120px; height: 120px; border: 1px solid #ccc; display: inline-block;">
+                    <img src="data:image/png;base64,\${qrCodeBase64}" style="width: 120px; height: 120px; border: 1px solid #ccc; display: inline-block;">
                 </div>
             </div>
 
@@ -330,7 +330,7 @@ function handlePdfGenerateClick(e) {
         margin:       0,
         filename:     'Invoice_' + (rowData.client_name || 'Client').replace(/[^a-z0-9]/gi, '_') + '.pdf',
         image:        { type: 'jpeg', quality: 0.98 },
-        html2canvas:  { scale: 2, useCORS: true },
+        html2canvas:  { scale: 2 },
         jsPDF:        { unit: 'in', format: 'a4', orientation: 'portrait' }
     };
 
@@ -339,7 +339,7 @@ function handlePdfGenerateClick(e) {
         btn.disabled = false;
     }).catch(err => {
         console.error(err);
-        alert('Error generating PDF');
+        alert('Error generating PDF: ' + (err.message || String(err)));
         btn.innerHTML = originalText;
         btn.disabled = false;
     });
