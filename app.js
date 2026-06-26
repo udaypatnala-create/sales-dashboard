@@ -803,12 +803,53 @@ function updateRegionChart() {
         plugins: {
             legend: {
                 position: 'right',
-                labels: { color: '#e6edf3', padding: 20 }
+                labels: { 
+                    color: document.body.classList.contains('light-mode') ? '#24292f' : '#e6edf3', 
+                    padding: 20 
+                }
             }
         },
         cutout: '75%'
     };
     createChart('regionChart', 'doughnut', data, options);
+}
+
+// Theme Toggle Logic
+const themeBtn = document.getElementById('toggle-theme');
+const themeIcon = document.getElementById('theme-icon');
+const themeText = document.getElementById('theme-text');
+
+function applyTheme(isLight) {
+    if (isLight) {
+        document.body.classList.add('light-mode');
+        if (themeIcon) themeIcon.textContent = '🌙';
+        if (themeText) themeText.textContent = 'Dark Mode';
+        Chart.defaults.color = '#57606a';
+        Chart.defaults.borderColor = 'rgba(0,0,0,0.05)';
+    } else {
+        document.body.classList.remove('light-mode');
+        if (themeIcon) themeIcon.textContent = '☀️';
+        if (themeText) themeText.textContent = 'Light Mode';
+        Chart.defaults.color = '#8b949e';
+        Chart.defaults.borderColor = 'rgba(255,255,255,0.05)';
+    }
+    renderCharts();
+}
+
+if (themeBtn) {
+    themeBtn.addEventListener('click', () => {
+        const isLight = !document.body.classList.contains('light-mode');
+        localStorage.setItem('theme', isLight ? 'light' : 'dark');
+        applyTheme(isLight);
+    });
+}
+
+// Init theme on load
+const savedTheme = localStorage.getItem('theme');
+if (savedTheme === 'light') {
+    applyTheme(true);
+} else {
+    applyTheme(false); // Default dark
 }
 
 init();

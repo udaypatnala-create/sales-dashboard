@@ -548,3 +548,46 @@ tbody tr:hover {
         padding: 1rem;
     }
 }
+
+/* Light Mode Overrides */
+body.light-mode {
+    --bg-color: #f6f8fa;
+    --text-color: #24292f;
+    --text-muted: #57606a;
+    --glass-bg: rgba(255, 255, 255, 0.7);
+    --glass-border: rgba(0, 0, 0, 0.1);
+    --card-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.05);
+}
+
+body.light-mode .blob-1 {
+    background: radial-gradient(circle, rgba(132,60,250,0.3) 0%, rgba(53,58,230,0.3) 100%);
+}
+
+body.light-mode .blob-2 {
+    background: radial-gradient(circle, rgba(250,60,195,0.3) 0%, rgba(230,53,60,0.3) 100%);
+}
+
+body.light-mode .data-table th {
+    background: rgba(0, 0, 0, 0.04);
+}
+
+body.light-mode .search-input,
+body.light-mode .form-input,
+body.light-mode .form-select {
+    background: rgba(0, 0, 0, 0.03);
+    color: var(--text-color);
+    border-color: var(--glass-border);
+}
+
+body.light-mode .sidebar-link:hover {
+    background: rgba(0, 0, 0, 0.05);
+}
+
+body.light-mode .sidebar-link.active {
+    background: rgba(88, 166, 255, 0.15);
+}
+
+body.light-mode .badge-grey { background: rgba(139, 148, 158, 0.15); color: #57606a; }
+body.light-mode .badge-green { background: rgba(46, 160, 67, 0.15); color: #1a7f37; }
+body.light-mode .badge-red { background: rgba(248, 81, 73, 0.15); color: #cf222e; }
+body.light-mode .badge-blue { background: rgba(88, 166, 255, 0.15); color: #0969da; }
