@@ -179,10 +179,28 @@ body {
     line-height: 1;
 }
 
+.sidebar.collapsed .sidebar-link {
+    justify-content: center;
+    padding-left: 0;
+    padding-right: 0;
+}
+
 .sidebar.collapsed .sidebar-link .text {
     opacity: 0;
     pointer-events: none;
     position: absolute;
+}
+
+.sidebar.collapsed .switch {
+    display: none;
+}
+
+.sidebar.collapsed #toggle-theme {
+    justify-content: center !important;
+}
+
+.sidebar.collapsed #toggle-theme > div {
+    gap: 0 !important;
 }
 
 .main-content {
