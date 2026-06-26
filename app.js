@@ -145,13 +145,15 @@ function handleGenerateClick(e) {
     btn.disabled = true;
 
     try {
-        var binary_string = window.atob(docxTemplateBase64);
-        var len = binary_string.length;
-        var bytes = new Uint8Array(len);
-        for (var i = 0; i < len; i++) {
-            bytes[i] = binary_string.charCodeAt(i);
+        if (typeof docxTemplateBase64 === 'undefined') {
+            alert("Assets are still loading or cached. Please refresh the page in 5 seconds and try again.");
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+            return;
         }
-        var zip = new PizZip(bytes.buffer);
+        
+        var binary_string = window.atob(docxTemplateBase64);
+        var zip = new PizZip(binary_string);
         var doc = new window.docxtemplater(zip, {
             paragraphLoop: true,
             linebreaks: true,
@@ -195,9 +197,10 @@ function handlePdfGenerateClick(e) {
     btn.disabled = true;
 
     const invoiceDiv = document.createElement('div');
-    invoiceDiv.style.position = 'fixed';
-    invoiceDiv.style.top = '100vh';
+    invoiceDiv.style.position = 'absolute';
+    invoiceDiv.style.top = '0';
     invoiceDiv.style.left = '0';
+    invoiceDiv.style.zIndex = '-9999';
     invoiceDiv.style.width = '8.5in';
     invoiceDiv.style.height = '11in';
     invoiceDiv.style.padding = '2in 1in 1in 1in';
